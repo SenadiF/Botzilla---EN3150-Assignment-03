@@ -13,6 +13,9 @@ dataset : https://archive.ics.uci.edu/dataset/73/mushroom
 
 Run the project 
 
-```uv venv --python 3.12.0
-
+```
+uv venv --python 3.12.0
+```
+```
+uv sync
 ```
