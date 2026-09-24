@@ -5,14 +5,27 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
+    "asttokens>=3.0.2",
+    "executing>=2.2.1",
+    "ipykernel>=7.3.0",
+    "ipython>=9.17.1",
     "matplotlib>=3.11.2",
+    "matplotlib-inline>=0.2.2",
     "numpy>=2.5.3",
     "opencv-python>=5.0.0.93",
     "pandas>=3.0.6",
     "pillow>=12.3.0",
+    "pure-eval>=0.2.4",
+    "requests>=2.34.2",
     "scikit-learn>=1.9.1",
     "seaborn>=0.13.2",
+    "stack-data>=0.6.3",
     "torch>=2.14.0",
     "torchvision>=0.29.0",
     "tqdm>=4.70.1",
+]
+
+[dependency-groups]
+dev = [
+    "ipykernel>=7.3.0",
 ]

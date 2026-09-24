@@ -8,3 +8,13 @@ seaborn
 scikit-learn
 pillow
 tqdm
+IPython
+ipykernel
+matplotlib_inline
+stack_data
+executing
+asttokens
+pure_eval
+matplotlib
+requests
+ipykernel
