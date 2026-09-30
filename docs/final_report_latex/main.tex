@@ -94,18 +94,347 @@
 % Section 1: 
 \section{ Resource-Constrained CNN for Edge Image Classification }
 
-\subsection{ModelA(Standard CNN)}
 
-\begin{lstlisting}[language=python, style=mystyle]
-def hello():
-    return "hi"
-print(hello())
-\end{lstlisting}
+
+\subsection{Model A -- Standard CNN}
+
+Model A is a standard convolutional neural network consisting of four
+standard $2$D convolutional layers, with each convolutional layer followed
+by a ReLU activation and a $2\times2$ max-pooling layer. The input image size
+is $64\times64$ pixels with three RGB channels. The number of filters is
+increased progressively from 32 to 256 to allow the network to learn
+increasingly complex visual features.
+
+The architecture of Model A is summarized below.
+
+\begin{table}[H]
+\centering
+\caption{Architecture of Model A}
+\label{tab:model_a_architecture}
+\begin{tabular}{lcccc}
+\hline
+\textbf{Layer} & \textbf{Kernel} & \textbf{Filters/Units} &
+\textbf{Activation} & \textbf{Output Size} \\
+\hline
+Input & -- & -- & -- & $3\times64\times64$ \\
+Conv2D-1 & $3\times3$ & 32 & ReLU & $32\times64\times64$ \\
+MaxPool & $2\times2$ & -- & -- & $32\times32\times32$ \\
+Conv2D-2 & $3\times3$ & 64 & ReLU & $64\times32\times32$ \\
+MaxPool & $2\times2$ & -- & -- & $64\times16\times16$ \\
+Conv2D-3 & $3\times3$ & 128 & ReLU & $128\times16\times16$ \\
+MaxPool & $2\times2$ & -- & -- & $128\times8\times8$ \\
+Conv2D-4 & $3\times3$ & 256 & ReLU & $256\times8\times8$ \\
+MaxPool & $2\times2$ & -- & -- & $256\times4\times4$ \\
+Flatten & -- & -- & -- & 4096 \\
+Fully Connected-1 & -- & 256 & ReLU & 256 \\
+Fully Connected-2 & -- & 9 & -- & 9 \\
+\hline
+\end{tabular}
+\end{table}
+
+Each convolutional layer uses a $3\times3$ kernel with padding of 1. The
+max-pooling layers use a $2\times2$ kernel with a stride of 2, reducing the
+spatial dimensions by half after each convolutional block. After the fourth
+pooling layer, the resulting feature map has dimensions
+$256\times4\times4$. This is flattened into 4096 features and passed through
+a fully connected layer with 256 units, followed by the final fully connected
+layer with 9 output units corresponding to the nine waste categories.
+
+\subsubsection{Trainable Parameter Calculation}
+
+The number of trainable parameters for a convolutional layer is calculated
+using
+
+\begin{equation}
+N_{\mathrm{conv}} =
+(K_h \times K_w \times C_{\mathrm{in}} \times C_{\mathrm{out}})
++ C_{\mathrm{out}},
+\end{equation}
+
+where the final term represents the bias parameters.
+
+For the four convolutional layers:
+
+\begin{align*}
+\mathrm{Conv1} &: (3\times3\times3\times32)+32 = 896,\\
+\mathrm{Conv2} &: (3\times3\times32\times64)+64 = 18,496,\\
+\mathrm{Conv3} &: (3\times3\times64\times128)+128 = 73,856,\\
+\mathrm{Conv4} &: (3\times3\times128\times256)+256 = 295,168.
+\end{align*}
+
+The number of parameters in a fully connected layer is calculated as
+
+\begin{equation}
+N_{\mathrm{FC}} =
+N_{\mathrm{in}}\times N_{\mathrm{out}} + N_{\mathrm{out}}.
+\end{equation}
+
+Therefore,
+
+\begin{align*}
+\mathrm{FC1} &: (4096\times256)+256 = 1,048,832,\\
+\mathrm{FC2} &: (256\times9)+9 = 2,313.
+\end{align*}
+
+Hence, the total number of trainable parameters is
+
+\begin{align*}
+N_{\mathrm{total}} &=
+896 + 18,496 + 73,856 + 295,168\\
+&\quad + 1,048,832 + 2,313\\
+&= \boxed{1,439,561}.
+\end{align*}
+
+The ReLU, max-pooling, dropout, and flattening operations do not contain
+trainable parameters. Therefore, Model A contains a total of
+\textbf{1,439,561 trainable parameters}.
+
+\subsubsection{Hardware-Aware Activation Function}
+
+ReLU was selected as the activation function for the convolutional and
+hidden fully connected layers. ReLU is defined as
+
+\begin{equation}
+f(x)=\max(0,x).
+\end{equation}
+
+ReLU was selected because it is computationally inexpensive and only
+requires a comparison with zero. Unlike sigmoid or softmax activations,
+ReLU does not require computationally expensive exponential operations.
+This makes it more suitable for resource-constrained hardware and reduces
+the computational overhead during training and inference.
+
+The final fully connected layer produces nine output logits without an
+explicit softmax activation. Since Cross-Entropy Loss is used during
+training, the required normalization is handled internally by the loss
+function. Therefore, applying a separate softmax operation in the model
+would introduce unnecessary exponential computations.
+
+
+
 
 
 \subsection{ ModelB(Lightweight CNN)}
-\subsection{Optimizer Selection & Tuning}
-\subsection{Custom Model Training & Evaluation}
+
+\subsection{Optimizer Selection \& Tuning}
+
+For Model A, three optimization approaches were evaluated: Adam, standard
+Stochastic Gradient Descent (SGD), and SGD with Momentum. Each optimizer was
+tested using learning rates of 0.01, 0.001, and 0.0001. To ensure a fair
+comparison, all experiments used the same CNN architecture, dataset split,
+preprocessing pipeline, batch size, and training duration of 20 epochs. A new
+randomly initialized model was used for each experiment.
+
+The Adam optimizer achieved its highest test accuracy of 69.14\% with a
+learning rate of 0.001. Therefore, Adam with a learning rate of 0.001 was
+selected as the optimizer and learning rate for training Model A.
+
+\begin{table}[H]
+\centering
+\caption{Optimizer and Learning Rate Comparison for Model A}
+\label{tab:optimizer_comparison}
+\begin{tabular}{lcc}
+\hline
+\textbf{Optimizer} & \textbf{Learning Rate} & \textbf{Test Accuracy} \\
+\hline
+Adam & 0.01 & 36.04\% \\
+\textbf{Adam} & \textbf{0.001} & \textbf{69.14\%} \\
+Adam & 0.0001 & 57.92\% \\
+\hline
+SGD & 0.01 & 43.90\% \\
+SGD & 0.001 & 19.35\% \\
+SGD & 0.0001 & 12.76\% \\
+\hline
+SGD + Momentum & 0.01 & 60.17\% \\
+SGD + Momentum & 0.001 & 42.50\% \\
+SGD + Momentum & 0.0001 & 19.35\% \\
+\hline
+\end{tabular}
+\end{table}
+
+The results demonstrate that the learning rate had a substantial effect on
+the convergence and final performance of Model A. For Adam, a learning rate
+of 0.01 resulted in a test accuracy of 36.04\%, while reducing it to 0.001
+increased the test accuracy to 69.14\%. Further reducing the learning rate
+to 0.0001 resulted in a lower accuracy of 57.92\%. This indicates that, for
+the selected CNN architecture and the fixed 20-epoch training period, a
+learning rate of 0.001 provided a more suitable update magnitude among the
+tested Adam configurations.
+
+Standard SGD produced lower performance across the tested learning rates,
+with its highest test accuracy being 43.90\% at a learning rate of 0.01.
+At learning rates of 0.001 and 0.0001, the model showed limited convergence
+within the 20 training epochs, resulting in test accuracies of 19.35\% and
+12.76\%, respectively.
+
+SGD with Momentum was also evaluated using a momentum value of 0.9.
+Momentum incorporates information from previous parameter updates into the
+current update, helping the optimizer maintain movement in consistent
+directions and potentially improving convergence. With a learning rate of
+0.01, adding momentum increased the test accuracy from 43.90\% with
+standard SGD to 60.17\%. At a learning rate of 0.001, SGD with Momentum
+achieved 42.50\%, compared with 19.35\% for standard SGD.
+
+Based on these experiments, Adam with a learning rate of 0.001 was selected
+for Model A because it achieved the highest test accuracy among the
+evaluated optimizer and learning-rate combinations.
+
+
+
+
+\subsection{Custom Model Training \& Evaluation}
+
+Both custom CNN models are trained for a minimum of 20 epochs using the
+same dataset split, preprocessing pipeline, and batch size to ensure a fair
+comparison. The training and validation losses are recorded at the end of
+each epoch to evaluate the convergence of each model.
+
+\subsubsection{Model A Training and Evaluation}
+
+Model A was trained for 20 epochs using the Adam optimizer with a learning
+rate of 0.001, which was selected during the optimizer tuning experiments.
+A batch size of 64 was used during training.
+
+The training and validation loss curves were recorded throughout the
+training process. The resulting loss curves are shown in
+Figure~\ref{fig:model_a_loss}.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.85\linewidth]{ModelA.png}
+    \caption{Training and validation loss curves for Model A.}
+    \label{fig:model_a_loss}
+\end{figure}
+
+After training, Model A was evaluated using the test dataset containing
+713 images. The model achieved a test accuracy of \textbf{69.14\%}.
+The weighted precision was \textbf{69.62\%}, while the weighted recall was
+\textbf{69.14\%}. The weighted F1-score was \textbf{68.69\%}.
+
+\begin{table}[H]
+\centering
+\caption{Overall Test Performance of Model A}
+\label{tab:model_a_overall}
+\begin{tabular}{lc}
+\hline
+\textbf{Metric} & \textbf{Model A} \\
+\hline
+Test Accuracy & 69.14\% \\
+Weighted Precision & 69.62\% \\
+Weighted Recall & 69.14\% \\
+Weighted F1-score & 68.69\% \\
+Test Samples & 713 \\
+\hline
+\end{tabular}
+\end{table}
+
+
+
+The class-wise precision, recall, and F1-score obtained on the test
+dataset are presented in Table~\ref{tab:model_a_classwise}.
+
+\begin{table}[H]
+\centering
+\caption{Class-wise Performance of Model A}
+\label{tab:model_a_classwise}
+\small
+\begin{tabular}{lccc}
+\hline
+\textbf{Class} & \textbf{Precision} & \textbf{Recall} & \textbf{F1-score} \\
+\hline
+Cardboard & 0.7606 & 0.7826 & 0.7714 \\
+Food Organics & 0.8478 & 0.6290 & 0.7222 \\
+Glass & 0.6623 & 0.8095 & 0.7286 \\
+Metal & 0.6122 & 0.7627 & 0.6792 \\
+Miscellaneous Trash & 0.4762 & 0.4000 & 0.4348 \\
+Paper & 0.7200 & 0.7200 & 0.7200 \\
+Plastic & 0.7706 & 0.6087 & 0.6802 \\
+Textile Trash & 0.6667 & 0.5833 & 0.6222 \\
+Vegetation & 0.7590 & 0.9692 & 0.8514 \\
+\hline
+\textbf{Macro Average} & 0.6973 & 0.6961 & 0.6900 \\
+\textbf{Weighted Average} & 0.6962 & 0.6914 & 0.6869 \\
+\hline
+\end{tabular}
+\end{table}
+
+
+The confusion matrix obtained from the Model A predictions is presented
+in Table~\ref{tab:model_a_confusion}. The rows represent the actual
+classes, while the columns represent the predicted classes.
+
+\begin{table}[H]
+\centering
+\caption{Confusion Matrix of Model A}
+\label{tab:model_a_confusion}
+\small
+\begin{tabular}{lccccccccc}
+\hline
+\textbf{Actual / Pred.}
+& \textbf{C}
+& \textbf{FO}
+& \textbf{G}
+& \textbf{M}
+& \textbf{MT}
+& \textbf{P}
+& \textbf{Pl}
+& \textbf{T}
+& \textbf{V} \\
+\hline
+Cardboard
+& 54 & 2 & 2 & 5 & 2 & 2 & 1 & 0 & 1 \\
+
+Food Organics
+& 2 & 39 & 0 & 3 & 2 & 0 & 3 & 0 & 13 \\
+
+Glass
+& 2 & 0 & 51 & 4 & 3 & 0 & 3 & 0 & 0 \\
+
+Metal
+& 2 & 1 & 2 & 90 & 9 & 5 & 7 & 2 & 0 \\
+
+Misc. Trash
+& 3 & 3 & 3 & 12 & 30 & 5 & 8 & 6 & 5 \\
+
+Paper
+& 5 & 0 & 4 & 7 & 1 & 54 & 3 & 1 & 0 \\
+
+Plastic
+& 3 & 1 & 14 & 20 & 11 & 1 & 84 & 4 & 0 \\
+
+Textile Trash
+& 0 & 0 & 1 & 6 & 4 & 8 & 0 & 28 & 1 \\
+
+Vegetation
+& 0 & 0 & 0 & 0 & 1 & 0 & 0 & 1 & 63 \\
+\hline
+\end{tabular}
+
+\vspace{2mm}
+
+\footnotesize
+C = Cardboard, FO = Food Organics, G = Glass, M = Metal,
+MT = Miscellaneous Trash, P = Paper, Pl = Plastic,
+T = Textile Trash, V = Vegetation.
+
+\end{table}
+
+
+
+
+
+
+
+The confusion matrix shows that Model A performed particularly well on the
+Vegetation class, correctly classifying 63 out of 65 samples. The
+Miscellaneous Trash class was more difficult to classify, with 30 out of
+75 samples correctly classified. Misclassifications were also observed
+between visually similar categories such as Plastic, Metal, and
+Miscellaneous Trash.
+
+
+
+
 \newpage
 \section{ Compare with Lightweight State-of-the-Art Networks}
 
