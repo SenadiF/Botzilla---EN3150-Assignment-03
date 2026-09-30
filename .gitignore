@@ -5,6 +5,8 @@ docs/final_report_latex/main.synctex.gz
 docs/final_report_latex/main.toc
 .venv/
 notebooks/data/*
-data/RealWasteData
+data/RealWasteData/realwaste-main
+data/RealWasteData/realwaste.zip
+__pycache__*
 
 
