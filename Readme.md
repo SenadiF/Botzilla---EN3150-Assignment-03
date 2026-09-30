@@ -7,4 +7,4 @@
 ### Group Botzilla
 
 
-dataset : https://archive.ics.uci.edu/dataset/73/mushroom 
+dataset : https://archive.ics.uci.edu/dataset/908/realwaste
