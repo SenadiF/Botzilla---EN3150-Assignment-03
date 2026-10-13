@@ -45,8 +45,8 @@
 
 
 % Title page
-\title{EN3150 Assignment 01: Learning from Data and Related Challenges and Linear Models for Regression}
-\author{Your Name \\ Your Index Number}
+\title{EN3150 Assignment 03: Simple Convolutional Neural Network to Perform Classification}
+\author{230415H Mudaliarachchi N.S. \\ 230185B Fernando S.D.}
 \date{\today}
 
 \begin{document}
@@ -91,16 +91,15 @@
 \listoftables
 \newpage
 
-% Section 1: 
-\section{ Resource-Constrained CNN for Edge Image Classification }
 
+\section{Resource-Constrained CNN for Edge Image Classification}
 
 
 \subsection{Model A -- Standard CNN}
 
 Model A is a standard convolutional neural network consisting of four
 standard $2$D convolutional layers, with each convolutional layer followed
-by a ReLU activation and a $2\times2$ max-pooling layer. The input image size
+by a ReLU activation and a $2\times2$ max pooling layer. The input image size
 is $64\times64$ pixels with three RGB channels. The number of filters is
 increased progressively from 32 to 256 to allow the network to learn
 increasingly complex visual features.
@@ -133,7 +132,7 @@ Fully Connected-2 & -- & 9 & -- & 9 \\
 \end{table}
 
 Each convolutional layer uses a $3\times3$ kernel with padding of 1. The
-max-pooling layers use a $2\times2$ kernel with a stride of 2, reducing the
+max pooling layers use a $2\times2$ kernel with a stride of 2, reducing the
 spatial dimensions by half after each convolutional block. After the fourth
 pooling layer, the resulting feature map has dimensions
 $256\times4\times4$. This is flattened into 4096 features and passed through
@@ -189,7 +188,7 @@ The ReLU, max-pooling, dropout, and flattening operations do not contain
 trainable parameters. Therefore, Model A contains a total of
 \textbf{1,439,561 trainable parameters}.
 
-\subsubsection{Hardware-Aware Activation Function}
+\subsubsection{Hardware Aware Activation Function}
 
 ReLU was selected as the activation function for the convolutional and
 hidden fully connected layers. ReLU is defined as
@@ -210,14 +209,8 @@ training, the required normalization is handled internally by the loss
 function. Therefore, applying a separate softmax operation in the model
 would introduce unnecessary exponential computations.
 
-
-
-
-
-\subsection{ ModelB(Lightweight CNN)}
-\subsubsection{Trainable Parameter Calculation}
-\subsubsection{Hardware-Aware Activation Function}
-\subsection{Optimizer Selection \& Tuning}
+% ---------------------------------------------------------------------
+\subsection{Optimizer Selection \& Tuning -- Model A}
 
 For Model A, three optimization approaches were evaluated: Adam, standard
 Stochastic Gradient Descent (SGD), and SGD with Momentum. Each optimizer was
@@ -226,14 +219,10 @@ comparison, all experiments used the same CNN architecture, dataset split,
 preprocessing pipeline, batch size, and training duration of 20 epochs. A new
 randomly initialized model was used for each experiment.
 
-The Adam optimizer achieved its highest test accuracy of 69.14\% with a
-learning rate of 0.001. Therefore, Adam with a learning rate of 0.001 was
-selected as the optimizer and learning rate for training Model A.
-
 \begin{table}[H]
 \centering
 \caption{Optimizer and Learning Rate Comparison for Model A}
-\label{tab:optimizer_comparison}
+\label{tab:optimizer_comparison_a}
 \begin{tabular}{lcc}
 \hline
 \textbf{Optimizer} & \textbf{Learning Rate} & \textbf{Test Accuracy} \\
@@ -280,25 +269,16 @@ Based on these experiments, Adam with a learning rate of 0.001 was selected
 for Model A because it achieved the highest test accuracy among the
 evaluated optimizer and learning-rate combinations.
 
-
-
-
-\subsection{Custom Model Training \& Evaluation}
-
-Both custom CNN models are trained for a minimum of 20 epochs using the
-same dataset split, preprocessing pipeline, and batch size to ensure a fair
-comparison. The training and validation losses are recorded at the end of
-each epoch to evaluate the convergence of each model.
-
-\subsubsection{Model A Training and Evaluation}
+% ---------------------------------------------------------------------
+\subsection{Custom Model Training \& Evaluation -- Model A}
 
 Model A was trained for 20 epochs using the Adam optimizer with a learning
 rate of 0.001, which was selected during the optimizer tuning experiments.
-A batch size of 64 was used during training.
-
-The training and validation loss curves were recorded throughout the
-training process. The resulting loss curves are shown in
-Figure~\ref{fig:model_a_loss}.
+The images were resized to $64\times64$ pixels, the stratified
+training, validation, and test split was used, and a batch size of 64 was
+used during training. Training and validation losses were recorded at the
+end of each epoch to monitor convergence. The resulting loss curves are
+shown in Figure~\ref{fig:model_a_loss}.
 
 \begin{figure}[H]
     \centering
@@ -329,8 +309,6 @@ Test Samples & 713 \\
 \end{tabular}
 \end{table}
 
-
-
 The class-wise precision, recall, and F1-score obtained on the test
 dataset are presented in Table~\ref{tab:model_a_classwise}.
 
@@ -359,7 +337,6 @@ Vegetation & 0.7590 & 0.9692 & 0.8514 \\
 \end{tabular}
 \end{table}
 
-
 The confusion matrix obtained from the Model A predictions is presented
 in Table~\ref{tab:model_a_confusion}. The rows represent the actual
 classes, while the columns represent the predicted classes.
@@ -384,28 +361,20 @@ classes, while the columns represent the predicted classes.
 \hline
 Cardboard
 & 54 & 2 & 2 & 5 & 2 & 2 & 1 & 0 & 1 \\
-
 Food Organics
 & 2 & 39 & 0 & 3 & 2 & 0 & 3 & 0 & 13 \\
-
 Glass
 & 2 & 0 & 51 & 4 & 3 & 0 & 3 & 0 & 0 \\
-
 Metal
 & 2 & 1 & 2 & 90 & 9 & 5 & 7 & 2 & 0 \\
-
 Misc. Trash
 & 3 & 3 & 3 & 12 & 30 & 5 & 8 & 6 & 5 \\
-
 Paper
 & 5 & 0 & 4 & 7 & 1 & 54 & 3 & 1 & 0 \\
-
 Plastic
 & 3 & 1 & 14 & 20 & 11 & 1 & 84 & 4 & 0 \\
-
 Textile Trash
 & 0 & 0 & 1 & 6 & 4 & 8 & 0 & 28 & 1 \\
-
 Vegetation
 & 0 & 0 & 0 & 0 & 1 & 0 & 0 & 1 & 63 \\
 \hline
@@ -420,121 +389,415 @@ T = Textile Trash, V = Vegetation.
 
 \end{table}
 
-
-
-
-
-
-
 The confusion matrix shows that Model A performed particularly well on the
 Vegetation class, correctly classifying 63 out of 65 samples. The
 Miscellaneous Trash class was more difficult to classify, with 30 out of
 75 samples correctly classified. Misclassifications were also observed
 between visually similar categories such as Plastic, Metal, and
 Miscellaneous Trash.
-\subsubsection{Model B Training and Evaluation}
-\subsubsection{Model A and B Comparison }
 
+
+\subsection{Model B -- Lightweight CNN}
+
+Model B was designed as a lightweight convolutional neural network for
+waste image classification under resource constrained hardware conditions.
+Unlike Model A, which uses standard convolutional layers, Model B uses
+depthwise separable convolutions to reduce the number of trainable
+parameters and computational requirements.
+
+The model accepts RGB images resized to $64\times64$ pixels and classifies
+them into the nine waste categories in the RealWaste dataset. It consists
+of three depthwise-separable convolutional blocks, each followed by a
+$2\times2$ max pooling layer. The number of output channels increases
+from 32 to 64 and then to 128. Adaptive average pooling is subsequently
+used to reduce the spatial dimensions to $1\times1$. The resulting
+128 features are passed through a fully connected layer with 256 units
+and a final output layer with nine units.
+
+Batch Normalization is applied after the depthwise and pointwise
+convolutions, followed by ReLU activation. Dropout with a probability
+of 0.3 is used in the classifier to help reduce overfitting.
+
+The architecture of Model B is summarized in
+Table~\ref{tab:model_b_architecture}.
+
+\begin{table}[H]
+\centering
+\caption{Architecture of Model B}
+\label{tab:model_b_architecture}
+\small
+\begin{tabular}{lcc}
+\hline
+\textbf{Layer} & \textbf{Output Channels/Units} &
+\textbf{Output Size} \\
+\hline
+Input & 3 & $3\times64\times64$ \\
+Depthwise Conv2D-1 & 3 & $3\times64\times64$ \\
+Pointwise Conv2D-1 & 32 & $32\times64\times64$ \\
+MaxPool & -- & $32\times32\times32$ \\
+Depthwise Conv2D-2 & 32 & $32\times32\times32$ \\
+Pointwise Conv2D-2 & 64 & $64\times32\times32$ \\
+MaxPool & -- & $64\times16\times16$ \\
+Depthwise Conv2D-3 & 64 & $64\times16\times16$ \\
+Pointwise Conv2D-3 & 128 & $128\times16\times16$ \\
+MaxPool & -- & $128\times8\times8$ \\
+Adaptive Average Pooling & 128 & $128\times1\times1$ \\
+Flatten & -- & 128 \\
+Dropout & -- & 128 \\
+Fully Connected-1 & 256 & 256 \\
+ReLU and Dropout & -- & 256 \\
+Fully Connected-2 & 9 & 9 \\
+\hline
+\end{tabular}
+\end{table}
+
+\subsubsection{Trainable Parameter Calculation}
+
+A depthwise-separable convolution separates a standard convolution
+into two operations: depthwise convolution and pointwise convolution.
+
+The depthwise convolution applies a separate $3\times3$ filter to each
+input channel. Its number of convolutional parameters is
+
+\begin{equation}
+N_{\mathrm{depthwise}} = K_h K_w C_{\mathrm{in}},
+\end{equation}
+
+where $K_h$ and $K_w$ are the kernel dimensions and
+$C_{\mathrm{in}}$ is the number of input channels. Bias terms are
+not used in the convolutional layers.
+
+The pointwise convolution uses a $1\times1$ kernel to combine information
+across channels. Its number of parameters is
+
+\begin{equation}
+N_{\mathrm{pointwise}} =
+C_{\mathrm{in}}C_{\mathrm{out}}.
+\end{equation}
+
+Batch Normalization introduces two trainable parameters per channel:
+a scale parameter and a shift parameter. Therefore, the trainable
+parameter count for each depthwise-separable block is
+
+\begin{equation}
+N_{\mathrm{block}} =
+K_hK_wC_{\mathrm{in}} + 2C_{\mathrm{in}}
++ C_{\mathrm{in}}C_{\mathrm{out}} + 2C_{\mathrm{out}}.
+\end{equation}
+
+For the three convolutional blocks, the parameter counts are
+
+\begin{align*}
+\mathrm{Block\ 1}
+&= (3\times3\times3)+(2\times3)\\
+&\quad +(3\times32)+(2\times32)\\
+&=193,\\[4pt]
+\mathrm{Block\ 2}
+&= (3\times3\times32)+(2\times32)\\
+&\quad +(32\times64)+(2\times64)\\
+&=2,528,\\[4pt]
+\mathrm{Block\ 3}
+&= (3\times3\times64)+(2\times64)\\
+&\quad +(64\times128)+(2\times128)\\
+&=9,152.
+\end{align*}
+
+The fully connected layers contain
+
+\begin{align*}
+\mathrm{FC1} &= (128\times256)+256 = 33,024,\\
+\mathrm{FC2} &= (256\times9)+9 = 2,313.
+\end{align*}
+
+Adaptive average pooling, max pooling, ReLU, and dropout do not
+introduce trainable parameters. Therefore, the total number of
+trainable parameters is
+
+\begin{align*}
+N_{\mathrm{total}}
+&=193+2,528+9,152\\
+&\quad +33,024+2,313\\
+&=\boxed{47,210}.
+\end{align*}
+
+Thus, Model B contains 47,210 trainable parameters.
+
+\subsubsection{Hardware Aware Activation Function}
+
+ReLU was selected as the activation function in the convolutional
+blocks and the hidden fully connected layer. It is defined as
+
+\begin{equation}
+f(x)=\max(0,x).
+\end{equation}
+
+ReLU is computationally inexpensive because it only requires comparing
+each input with zero. This avoids the exponential operations required
+by sigmoid and softmax activations and makes ReLU suitable for
+resource constrained devices.
+
+Batch Normalization is used to normalize intermediate feature
+activations during training, while dropout randomly deactivates a
+fraction of hidden units during training to help reduce overfitting.
+
+The final fully connected layer produces nine output logits without
+an explicit softmax activation. Cross Entropy Loss is used during
+training, and it internally performs the required log softmax
+computation. Therefore, a separate softmax layer is not required
+during training.
+
+% ---------------------------------------------------------------------
+
+\subsection{Custom Model Training \& Evaluation -- Model B}
+
+Model B was trained for 20 epochs using the Adam optimizer with a
+learning rate of $0.001$, using the same $64\times64$ input size,
+stratified data split, and batch size of 64 as Model A. During
+training, the average training loss decreased from 2.0007 in the first
+epoch to 1.0349 in the final epoch. The validation loss decreased from
+1.8015 to 1.0420, indicating that the model learned useful features
+from the training data.
+
+The training and validation loss curves are shown in
+Figure~\ref{fig:model_b_loss}.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.85\linewidth]{B1.png}
+    \caption{Training and validation loss curves for Model B after
+    20 epochs.}
+    \label{fig:model_b_loss}
+\end{figure}
+
+After training, Model B was evaluated on the test dataset containing
+713 images. It achieved a test accuracy of \textbf{61.85\%}, a weighted
+precision of \textbf{61.92\%}, a weighted recall of \textbf{61.85\%},
+and a weighted F1-score of \textbf{59.09\%}. The results are summarized
+in Table~\ref{tab:model_b_overall}.
+
+\begin{table}[H]
+\centering
+\caption{Overall Test Performance of Model B}
+\label{tab:model_b_overall}
+\begin{tabular}{lc}
+\hline
+\textbf{Metric} & \textbf{Model B} \\
+\hline
+Test Accuracy & 61.85\% \\
+Weighted Precision & 61.92\% \\
+Weighted Recall & 61.85\% \\
+Weighted F1-score & 59.09\% \\
+Test Samples & 713 \\
+\hline
+\end{tabular}
+\end{table}
+
+The class-wise precision, recall, and F1-score are presented in
+Table~\ref{tab:model_b_classwise}.
+
+\begin{table}[H]
+\centering
+\caption{Class-wise Performance of Model B}
+\label{tab:model_b_classwise}
+\small
+\begin{tabular}{lccc}
+\hline
+\textbf{Class} & \textbf{Precision} & \textbf{Recall} &
+\textbf{F1-score} \\
+\hline
+Cardboard & 0.9423 & 0.7101 & 0.8099 \\
+Food Organics & 0.6757 & 0.8065 & 0.7353 \\
+Glass & 0.5882 & 0.6349 & 0.6107 \\
+Metal & 0.5145 & 0.7542 & 0.6117 \\
+Miscellaneous Trash & 0.3000 & 0.0800 & 0.1263 \\
+Paper & 0.6579 & 0.6667 & 0.6623 \\
+Plastic & 0.5542 & 0.6667 & 0.6053 \\
+Textile Trash & 0.8000 & 0.1667 & 0.2759 \\
+Vegetation & 0.7703 & 0.8769 & 0.8201 \\
+\hline
+Macro Average & 0.6448 & 0.5959 & 0.5842 \\
+Weighted Average & 0.6192 & 0.6185 & 0.5909 \\
+\hline
+\end{tabular}
+\end{table}
+
+The confusion matrix obtained from the test predictions is presented
+in Table~\ref{tab:model_b_confusion}. Rows represent the actual
+classes, while columns represent the predicted classes.
+
+\begin{table}[H]
+\centering
+\caption{Confusion Matrix of Model B}
+\label{tab:model_b_confusion}
+\resizebox{\textwidth}{!}{
+\begin{tabular}{lccccccccc}
+\hline
+\textbf{Actual / Pred.}
+& \textbf{C} & \textbf{FO} & \textbf{G} & \textbf{M}
+& \textbf{MT} & \textbf{P} & \textbf{Pl} & \textbf{T} & \textbf{V} \\
+\hline
+Cardboard
+& 49 & 1 & 2 & 2 & 0 & 7 & 8 & 0 & 0 \\
+Food Organics
+& 0 & 50 & 0 & 1 & 0 & 0 & 6 & 0 & 5 \\
+Glass
+& 0 & 1 & 40 & 14 & 1 & 0 & 7 & 0 & 0 \\
+Metal
+& 0 & 1 & 4 & 89 & 2 & 2 & 20 & 0 & 0 \\
+Misc. Trash
+& 0 & 8 & 9 & 22 & 6 & 5 & 17 & 2 & 6 \\
+Paper
+& 3 & 1 & 5 & 8 & 0 & 50 & 8 & 0 & 0 \\
+Plastic
+& 0 & 7 & 7 & 27 & 3 & 2 & 92 & 0 & 0 \\
+Textile Trash
+& 0 & 0 & 0 & 9 & 7 & 10 & 8 & 8 & 6 \\
+Vegetation
+& 0 & 5 & 1 & 1 & 1 & 0 & 0 & 0 & 57 \\
+\hline
+\end{tabular}
+}
+\vspace{2mm}
+
+\footnotesize
+C = Cardboard, FO = Food Organics, G = Glass, M = Metal,
+MT = Miscellaneous Trash, P = Paper, Pl = Plastic,
+T = Textile Trash, V = Vegetation.
+\end{table}
+
+The results show that Model B performed relatively well on the
+Vegetation and Cardboard categories, achieving F1-scores of 0.8201
+and 0.8099, respectively. Food Organics also achieved a recall of
+0.8065. However, classification performance varied considerably
+across the nine categories.
+
+Miscellaneous Trash was the most difficult category, with only
+6 out of 75 samples correctly classified, resulting in a recall of
+0.0800. Textile Trash also showed low recall, with 8 out of 48
+samples correctly classified. Several Metal and Plastic samples
+were confused with one another, while Miscellaneous Trash was
+frequently predicted as Metal or Plastic.
+
+These results indicate that the lightweight architecture learned
+useful visual features but had difficulty distinguishing some
+visually similar waste categories. The relatively small number of
+trainable parameters reduces model complexity, but it may also
+limit the capacity to learn more discriminative features.
+
+% =====================================================================
+% COMPARISON A vs B
+% =====================================================================
+\subsection{Comparison of Model A and Model B}
+
+Model A and Model B were compared in terms of total parameter count,
+estimated model size on disk, training time per epoch, and test
+accuracy. The estimated model size assumes that each parameter is stored
+as a 32-bit (4-byte) floating-point value, i.e.\
+$\text{size} \approx 4 \times N_{\mathrm{params}}$ bytes. The number of
+multiply--accumulate operations (MACs) per image was also calculated
+analytically from the layer dimensions as an indicator of computational
+cost.
+
+% TODO: Fill in the measured training time per epoch for both models.
+\begin{table}[H]
+\centering
+\caption{Comparison of Model A and Model B}
+\label{tab:model_ab_comparison}
+\begin{tabular}{lcc}
+\hline
+\textbf{Metric} & \textbf{Model A} & \textbf{Model B} \\
+\hline
+Convolution Type & Standard & Depthwise-separable \\
+Total Trainable Parameters & 1,439,561 & 47,210 \\
+Estimated Model Size on Disk (KB) & 5,623.3 & 184.4 \\
+Approx. MACs per Image & 61.2 M & 5.18 M \\
+Training Time per Epoch (s) & -- & 28.3s \\
+Test Accuracy & 69.14\% & 61.85\% \\
+Weighted F1-score & 68.69\% & 59.09\% \\
+\hline
+\end{tabular}
+\end{table}
+
+\paragraph{Trade-offs of moving to depthwise-separable convolutions.}
+A standard $3\times3$ convolution learns spatial and cross-channel
+patterns jointly using $9C_{\mathrm{in}}C_{\mathrm{out}}$ weights. A
+depthwise-separable convolution factorizes this into a per-channel
+$3\times3$ spatial filter ($9C_{\mathrm{in}}$ weights) followed by a
+$1\times1$ channel-mixing filter ($C_{\mathrm{in}}C_{\mathrm{out}}$
+weights). For layers with many output channels, this reduces the
+parameter and computation cost by a factor close to
+$1/C_{\mathrm{out}} + 1/9$, i.e.\ roughly $8$--$9\times$ per layer.
+
+Model B combines this factorization with two further design choices:
+it uses three convolutional blocks instead of four, and it replaces the
+large flatten-plus-dense layer of Model A ($4096\times256$, which alone
+accounts for 1,048,832 of Model A's 1,439,561 parameters) with adaptive
+average pooling. As a result, Model B has approximately 96.72\% fewer
+trainable parameters than Model A ($30.5\times$ smaller), its estimated
+storage drops from about 5.5\,MB to about 184\,KB, and its computational
+cost falls from approximately 61.2 million to 5.18 million MACs per image
+(about $11.8\times$ fewer).
+
+However, this compression came with a loss in accuracy. Model A achieved
+69.14\% test accuracy whereas Model B achieved 61.85\%, a drop of 7.29
+percentage points, and the weighted F1-score fell from 68.69\% to
+59.09\%. The drop was concentrated in the harder, visually diverse
+classes: Miscellaneous Trash recall fell from 0.40 to 0.08 and Textile
+Trash recall fell from 0.58 to 0.17. Because each depthwise filter only
+sees one channel, and the network has fewer layers and channels, Model B
+has less representational capacity to learn the fine-grained texture and
+colour combinations that separate these classes.
+
+In practice, Model A is the better choice if accuracy is the priority and
+the target hardware has several megabytes of memory available. Model B is
+far better suited to tightly constrained edge devices, where its sub-200\,KB footprint and low compute
+requirement make deployment feasible.
 
 
 \newpage
-\section{ Compare with Lightweight State-of-the-Art Networks}
+\section{Compare with Lightweight State-of-the-Art Networks}
 
-\subsection{SOTAFine-Tuning & Evaluation}
+% ---------------------------------------------------------------------
+\subsection{SOTA Fine-Tuning \& Evaluation}
 
-Two pre trained lightweight convolutional neural network architectures, MobileNetV2 and EfficientNet-B0, were selected for evaluation. Both architectures are designed to provide efficient image classification and are suitable for resource constrained and mobile/edge computing environments. The same training, validation, and test splits were used for both models to ensure a consistent comparison. The dataset was divided into 70\% training, 15\% validation, and 15\% testing subsets using the same stratified split. Both models used ImageNet pretrained weights, and input images were resized to $224\times224$ pixels.
+Two pre-trained lightweight convolutional neural network architectures,
+EfficientNet-B0 and MobileNetV2, were selected for evaluation. Both
+architectures are designed to provide efficient image classification and
+are suitable for resource-constrained and mobile/edge computing
+environments. The same training, validation, and test splits were used
+for both models to ensure a consistent comparison. The dataset was
+divided into 70\% training, 15\% validation, and 15\% testing subsets
+using the same stratified split. Both models used ImageNet pretrained
+weights, and input images were resized to $224\times224$ pixels.
 
-\subsubsection{MobileNetV2}
-
-MobileNetV2 was first loaded with its ImageNet pretrained weights. Since the original model was trained to classify 1000 ImageNet classes, its final classification layer was replaced with a new fully connected layer with 9 output neurons, corresponding to the nine waste categories in the RealWaste dataset.
-
-Initially, the feature extraction layers of MobileNetV2 were frozen, while only the newly added classification layer was trained. The model was trained for 10 epochs using the Adam optimizer with a learning rate of $0.001$. This allowed the newly added classifier to adapt the pretrained ImageNet features to the waste classification task without modifying the pretrained feature extractor.
-
-After the initial 10 epochs, the deeper layers of the network were fine-tuned. Specifically, feature blocks 14--18 were unfrozen while the earlier feature layers remained frozen. The learning rate was reduced to $0.0001$ to allow the pretrained weights to be adjusted gradually without significantly disrupting the previously learned features. The model was subsequently fine tuned for a further 5 epochs.
-
-The best validation accuracy obtained during fine tuning was $89.20\%$. The final model was then evaluated on the previously unseen test set, obtaining a test loss of $0.3444$ and a test accuracy of $88.50\%$.
-
-\begin{table}[H]
-    \centering
-    \caption{MobileNetV2 classification report on the RealWaste test set.}
-    \label{tab:mobilenetv2_classification}
-    \begin{tabular}{lcccc}
-        \hline
-        Class & Precision & Recall & F1-score & Support \\
-        \hline
-        Cardboard & 0.94 & 0.93 & 0.93 & 69 \\
-        Food Organics & 0.93 & 0.92 & 0.93 & 62 \\
-        Glass & 0.85 & 0.89 & 0.87 & 63 \\
-        Metal & 0.85 & 0.89 & 0.87 & 118 \\
-        Miscellaneous Trash & 0.77 & 0.79 & 0.78 & 75 \\
-        Paper & 0.99 & 0.88 & 0.93 & 75 \\
-        Plastic & 0.87 & 0.84 & 0.86 & 138 \\
-        Textile Trash & 0.88 & 0.96 & 0.92 & 48 \\
-        Vegetation & 0.95 & 0.95 & 0.95 & 65 \\
-        \hline
-        Accuracy & & & 0.88 & 713 \\
-        Macro Avg. & 0.89 & 0.89 & 0.89 & 713 \\
-        Weighted Avg. & 0.89 & 0.88 & 0.89 & 713 \\
-        \hline
-    \end{tabular}
-\end{table}
-
-The confusion matrix for MobileNetV2 is shown in Table~\ref{tab:mobilenetv2_confusion}.
-
-\begin{table}[H]
-    \centering
-    \caption{MobileNetV2 confusion matrix on the RealWaste test set.}
-    \label{tab:mobilenetv2_confusion}
-    \resizebox{\textwidth}{!}{
-    \begin{tabular}{lccccccccc}
-        \hline
-        & Cardboard & Food Org. & Glass & Metal & Misc. Trash & Paper & Plastic & Textile & Vegetation \\
-        \hline
-        Cardboard
-        & 64 & 0 & 2 & 2 & 0 & 1 & 0 & 0 & 0 \\
-        
-        Food Organics
-        & 0 & 57 & 0 & 0 & 1 & 0 & 2 & 0 & 2 \\
-        
-        Glass
-        & 1 & 0 & 56 & 3 & 2 & 0 & 1 & 0 & 0 \\
-        
-        Metal
-        & 0 & 0 & 1 & 105 & 5 & 0 & 7 & 0 & 0 \\
-        
-        Misc. Trash
-        & 0 & 2 & 1 & 1 & 59 & 0 & 6 & 5 & 1 \\
-        
-        Paper
-        & 2 & 1 & 1 & 2 & 2 & 66 & 1 & 0 & 0 \\
-        
-        Plastic
-        & 1 & 1 & 5 & 11 & 3 & 0 & 116 & 1 & 0 \\
-        
-        Textile Trash
-        & 0 & 0 & 0 & 0 & 2 & 0 & 0 & 46 & 0 \\
-        
-        Vegetation
-        & 0 & 0 & 0 & 0 & 3 & 0 & 0 & 0 & 62 \\
-        \hline
-    \end{tabular}
-    }
-\end{table}
-
-The model correctly classified most samples in the Cardboard, Food Organics, Paper, Textile Trash, and Vegetation categories. The most noticeable confusion occurred between Plastic and Metal, where 11 Plastic samples were classified as Metal and 7 Metal samples were classified as Plastic. Miscellaneous Trash also showed relatively greater confusion with Plastic and Textile Trash.
+Both models followed the same two-stage transfer-learning strategy: an
+initial stage in which the pretrained backbone was frozen and only a new
+classification layer was trained, followed by low-learning-rate
+fine-tuning of the deeper feature layers.
 
 \subsubsection{EfficientNet-B0}
 
-EfficientNet-B0 was subsequently evaluated using the same dataset split and preprocessing procedure. The model was initialized using ImageNet-pretrained weights. Similar to MobileNetV2, the original 1000-class classification layer was replaced with a new fully connected layer producing 9 output classes.
+EfficientNet-B0 was initialized using ImageNet-pretrained weights. Since
+the original model was trained to classify 1000 ImageNet classes, its
+final classification layer was replaced with a new fully connected layer
+producing 9 outputs, corresponding to the nine waste categories in the
+RealWaste dataset.
 
-Initially, the EfficientNet-B0 feature extractor was frozen and only the newly added classifier was trained. The model was trained for 10 epochs using the Adam optimizer with a learning rate of $0.001$. At the end of this stage, the model achieved a validation accuracy of $83.03\%$.
+Initially, the EfficientNet-B0 feature extractor was frozen and only the
+newly added classifier was trained. The model was trained for 10 epochs
+using the Adam optimizer with a learning rate of $0.001$. At the end of
+this stage, the model achieved a validation accuracy of $83.03\%$.
 
-The deeper feature layers were then fine-tuned by unfreezing feature blocks 6--8 while keeping the earlier feature blocks frozen. The learning rate was reduced to $0.0001$, and the model was fine tuned for an additional 5 epochs. Validation accuracy increased to $89.90\%$ at the end of this stage.
+The deeper feature layers were then fine-tuned by unfreezing feature
+blocks 6--8 while keeping the earlier feature blocks frozen. The learning
+rate was reduced to $0.0001$, and the model was fine-tuned for an
+additional 5 epochs. Validation accuracy increased to $89.90\%$ at the end
+of this stage.
 
-To investigate whether additional fine tuning could improve the model, a further 5 epochs were performed using the same learning rate and trainable layers. The resulting model achieved a test loss of $0.3521$ and a test accuracy of $88.92\%$.
-
-Thus, the EfficientNet-B0 experiment followed the same two stage training strategy used for MobileNetV2: an initial classifier training stage with the pretrained backbone frozen, followed by low learning rate fine tuning of the deeper feature layers.
-
+To investigate whether additional fine-tuning could improve the model, a
+further 5 epochs were performed using the same learning rate and
+trainable layers. The resulting model achieved a test loss of $0.3521$
+and a test accuracy of $88.92\%$.
 
 \begin{table}[H]
     \centering
@@ -574,28 +837,20 @@ The confusion matrix for EfficientNet-B0 is shown in Table~\ref{tab:efficientnet
         \hline
         Cardboard
         & 65 & 0 & 0 & 0 & 0 & 1 & 3 & 0 & 0 \\
-        
         Food Organics
         & 0 & 56 & 0 & 0 & 4 & 0 & 0 & 1 & 1 \\
-        
         Glass
         & 0 & 0 & 53 & 3 & 2 & 1 & 4 & 0 & 0 \\
-        
         Metal
         & 1 & 0 & 0 & 105 & 4 & 1 & 7 & 0 & 0 \\
-        
         Misc. Trash
         & 1 & 1 & 1 & 3 & 60 & 1 & 5 & 3 & 0 \\
-        
         Paper
         & 4 & 1 & 0 & 1 & 0 & 66 & 2 & 1 & 0 \\
-        
         Plastic
         & 0 & 0 & 3 & 8 & 3 & 0 & 123 & 0 & 1 \\
-        
         Textile Trash
         & 0 & 0 & 0 & 1 & 2 & 0 & 1 & 44 & 0 \\
-        
         Vegetation
         & 0 & 2 & 0 & 0 & 1 & 0 & 0 & 0 & 62 \\
         \hline
@@ -603,9 +858,110 @@ The confusion matrix for EfficientNet-B0 is shown in Table~\ref{tab:efficientnet
     }
 \end{table}
 
-The EfficientNet-B0 model correctly classified most samples across the nine waste categories. The strongest classification performance was observed for Vegetation, with an F1-score of $0.96$, followed by Cardboard with an F1-score of $0.93$. The largest number of misclassifications occurred between Plastic and Metal, where 8 Plastic samples were classified as Metal and 7 Metal samples were classified as Plastic. Miscellaneous Trash also showed some confusion with Plastic and Textile Trash.
+The EfficientNet-B0 model correctly classified most samples across the
+nine waste categories. The strongest classification performance was
+observed for Vegetation, with an F1-score of $0.96$, followed by Cardboard
+with an F1-score of $0.93$. The largest number of misclassifications
+occurred between Plastic and Metal, where 8 Plastic samples were
+classified as Metal and 7 Metal samples were classified as Plastic.
+Miscellaneous Trash also showed some confusion with Plastic and Textile
+Trash.
 
+\subsubsection{MobileNetV2}
 
+MobileNetV2 was evaluated using the same dataset split, preprocessing
+procedure, and two-stage training strategy as EfficientNet-B0. The model
+was loaded with its ImageNet pretrained weights, and its final 1000-class
+classification layer was replaced with a new fully connected layer with
+9 output neurons.
+
+Initially, the feature extraction layers of MobileNetV2 were frozen,
+while only the newly added classification layer was trained. The model
+was trained for 10 epochs using the Adam optimizer with a learning rate
+of $0.001$. This allowed the newly added classifier to adapt the
+pretrained ImageNet features to the waste classification task without
+modifying the pretrained feature extractor.
+
+After the initial 10 epochs, the deeper layers of the network were
+fine-tuned. Specifically, feature blocks 14--18 were unfrozen while the
+earlier feature layers remained frozen. The learning rate was reduced to
+$0.0001$ to allow the pretrained weights to be adjusted gradually without
+significantly disrupting the previously learned features. The model was
+subsequently fine-tuned for a further 5 epochs.
+
+The best validation accuracy obtained during fine-tuning was $89.20\%$.
+The final model was then evaluated on the previously unseen test set,
+obtaining a test loss of $0.3444$ and a test accuracy of $88.50\%$.
+
+\begin{table}[H]
+    \centering
+    \caption{MobileNetV2 classification report on the RealWaste test set.}
+    \label{tab:mobilenetv2_classification}
+    \begin{tabular}{lcccc}
+        \hline
+        Class & Precision & Recall & F1-score & Support \\
+        \hline
+        Cardboard & 0.94 & 0.93 & 0.93 & 69 \\
+        Food Organics & 0.93 & 0.92 & 0.93 & 62 \\
+        Glass & 0.85 & 0.89 & 0.87 & 63 \\
+        Metal & 0.85 & 0.89 & 0.87 & 118 \\
+        Miscellaneous Trash & 0.77 & 0.79 & 0.78 & 75 \\
+        Paper & 0.99 & 0.88 & 0.93 & 75 \\
+        Plastic & 0.87 & 0.84 & 0.86 & 138 \\
+        Textile Trash & 0.88 & 0.96 & 0.92 & 48 \\
+        Vegetation & 0.95 & 0.95 & 0.95 & 65 \\
+        \hline
+        Accuracy & & & 0.88 & 713 \\
+        Macro Avg. & 0.89 & 0.89 & 0.89 & 713 \\
+        Weighted Avg. & 0.89 & 0.88 & 0.89 & 713 \\
+        \hline
+    \end{tabular}
+\end{table}
+
+The confusion matrix for MobileNetV2 is shown in Table~\ref{tab:mobilenetv2_confusion}.
+
+\begin{table}[H]
+    \centering
+    \caption{MobileNetV2 confusion matrix on the RealWaste test set.}
+    \label{tab:mobilenetv2_confusion}
+    \resizebox{\textwidth}{!}{
+    \begin{tabular}{lccccccccc}
+        \hline
+        & Cardboard & Food Org. & Glass & Metal & Misc. Trash & Paper & Plastic & Textile & Vegetation \\
+        \hline
+        Cardboard
+        & 64 & 0 & 2 & 2 & 0 & 1 & 0 & 0 & 0 \\
+        Food Organics
+        & 0 & 57 & 0 & 0 & 1 & 0 & 2 & 0 & 2 \\
+        Glass
+        & 1 & 0 & 56 & 3 & 2 & 0 & 1 & 0 & 0 \\
+        Metal
+        & 0 & 0 & 1 & 105 & 5 & 0 & 7 & 0 & 0 \\
+        Misc. Trash
+        & 0 & 2 & 1 & 1 & 59 & 0 & 6 & 5 & 1 \\
+        Paper
+        & 2 & 1 & 1 & 2 & 2 & 66 & 1 & 0 & 0 \\
+        Plastic
+        & 1 & 1 & 5 & 11 & 3 & 0 & 116 & 1 & 0 \\
+        Textile Trash
+        & 0 & 0 & 0 & 0 & 2 & 0 & 0 & 46 & 0 \\
+        Vegetation
+        & 0 & 0 & 0 & 0 & 3 & 0 & 0 & 0 & 62 \\
+        \hline
+    \end{tabular}
+    }
+\end{table}
+
+The model correctly classified most samples in the Cardboard, Food
+Organics, Paper, Textile Trash, and Vegetation categories. The most
+noticeable confusion occurred between Plastic and Metal, where 11 Plastic
+samples were classified as Metal and 7 Metal samples were classified as
+Plastic. Miscellaneous Trash also showed relatively greater confusion with
+Plastic and Textile Trash.
+
+The test performance and model complexity of the two pre-trained
+architectures are summarized in Tables~\ref{tab:pretrained_performance}
+and~\ref{tab:model_complexity}.
 
 \begin{table}[H]
     \centering
@@ -615,8 +971,8 @@ The EfficientNet-B0 model correctly classified most samples across the nine wast
         \hline
         Model & Test Loss & Test Accuracy \\
         \hline
-        MobileNetV2 & 0.3444 & 88.50\% \\
         EfficientNet-B0 & 0.3521 & 88.92\% \\
+        MobileNetV2 & 0.3444 & 88.50\% \\
         \hline
     \end{tabular}
 \end{table}
@@ -629,13 +985,112 @@ The EfficientNet-B0 model correctly classified most samples across the nine wast
         \hline
         Model & Total Parameters & Saved Model Size (MB) \\
         \hline
-        MobileNetV2 & 2,235,401 & 8.76 \\
         EfficientNet-B0 & 4,019,077 & 15.62 \\
+        MobileNetV2 & 2,235,401 & 8.76 \\
         \hline
     \end{tabular}
 \end{table}
+
+% ---------------------------------------------------------------------
 \newpage
-\subsection{Final Comparison & Trade-off Discussion}
+\subsection{Final Comparison \& Trade-off Discussion}
+
+Table~\ref{tab:final_comparison} compares the custom resource-constrained
+CNN (Model B) with the two fine-tuned lightweight SOTA models.
+Computational cost is expressed as approximate multiply--accumulate
+operations (MACs) per image. For Model B this was calculated from the
+layer dimensions; for MobileNetV2 and EfficientNet-B0 the values are the
+approximate figures reported for the original architectures at
+$224\times224$ input, since replacing the final layer with a 9-class
+layer changes the total only negligibly.
+
+\begin{table}[H]
+\centering
+\caption{Final comparison of Model B and the fine-tuned SOTA models}
+\label{tab:final_comparison}
+\resizebox{\textwidth}{!}{
+\begin{tabular}{lccc}
+\hline
+\textbf{Metric} & \textbf{Model B (custom)} & \textbf{MobileNetV2} & \textbf{EfficientNet-B0} \\
+\hline
+Initialization & Random (from scratch) & ImageNet pretrained & ImageNet pretrained \\
+Input Resolution & $64\times64$ & $224\times224$ & $224\times224$ \\
+Total Parameters & 47,210 & 2,235,401 & 4,019,077 \\
+Parameters relative to Model B & $1\times$ & $47.4\times$ & $85.1\times$ \\
+Model Size & $\approx$184\,KB (est.) & 8.76\,MB & 15.62\,MB \\
+Approx. MACs per Image & $\approx$5.2\,M & $\approx$300\,M & $\approx$390\,M \\
+Training Epochs & 20 & 15 & 20 \\
+Test Accuracy & 61.85\% & 88.50\% & 88.92\% \\
+Weighted F1-score & 59.09\% & 89\% & 89\% \\
+\hline
+\end{tabular}
+}
+\end{table}
+
+\paragraph{Accuracy.}
+The pre-trained models clearly outperformed the custom model. MobileNetV2
+and EfficientNet-B0 reached 88.50\% and 88.92\% test accuracy, roughly 27
+percentage points above Model B's 61.85\%. The gap was largest on the
+difficult classes: Miscellaneous Trash recall was 0.08 for Model B but
+0.79--0.80 for the SOTA models, and Textile Trash recall was 0.17 for
+Model B compared with 0.92--0.96. Three factors explain this. First, the
+SOTA models start from features learned on over a million ImageNet
+images, whereas Model B must learn everything from roughly 3,300
+training images. Second, they have far greater capacity (deeper
+inverted-residual blocks, squeeze-and-excitation in EfficientNet-B0).
+Third, they operate on $224\times224$ inputs, which preserve fine texture
+detail that is lost when images are reduced to $64\times64$ for Model B.
+The accuracy comparison therefore reflects the whole design choice, not
+architecture alone.
+
+\paragraph{Memory footprint.}
+Model B is the clear winner on memory. With 47,210 parameters its
+weights require only about 184\,KB in 32-bit floating point (about 46\,KB
+after 8-bit quantization), which fits within the flash memory of many
+microcontrollers. MobileNetV2 requires 8.76\,MB and EfficientNet-B0
+15.62\,MB, i.e.\ roughly 47--85 times more.  Activation memory during inference follows the same trend,
+because the SOTA models process feature maps derived from $224\times224$
+inputs rather than $64\times64$.
+
+\paragraph{Computational cost.}
+Model B requires roughly 5.2 million MACs per image, compared with
+approximately 300 million for MobileNetV2 and 390 million for
+EfficientNet-B0, a difference of about 58--75 times. This translates into
+lower latency and energy per inference, which matters for battery-powered
+or always-on devices such as a smart waste bin. Between the two SOTA
+models, MobileNetV2 achieved almost the same accuracy as EfficientNet-B0
+(only 0.42 percentage points lower) with about 55\% of the parameters and
+fewer operations, making it the more efficient of the two for this task.
+
+\paragraph{Advantages and limitations of a custom sub-100k model.}
+Building a custom model from scratch gives full control over every layer,
+so it can be sized exactly to a hardware budget, uses only simple
+operations (depthwise and pointwise convolutions, ReLU, pooling) that are
+widely supported by embedded inference frameworks, and has no dependence
+on large pretrained checkpoints. Its main limitations are limited
+representational capacity and the lack of pretrained knowledge, which
+together make it data-hungry and weaker on visually diverse classes; it
+also requires more design and tuning effort to reach acceptable accuracy.
+
+\paragraph{Advantages and limitations of pre-trained lightweight models.}
+Industry-standard pre-trained models deliver high accuracy quickly, with
+only 15--20 epochs of fine-tuning, and benefit from well-tested
+architectures and tooling. Their limitations are a footprint measured in
+megabytes and a compute cost in the hundreds of millions of operations
+per image, which rules out the smallest edge devices and increases
+latency and energy use on modest hardware.
+
+\paragraph{Conclusion.}
+If the deployment target can accommodate a few megabytes of memory, such
+as a smartphone or an embedded Linux board, a fine-tuned MobileNetV2 offers
+the best balance of accuracy and efficiency in this study. If the target
+is a microcontroller with only hundreds of kilobytes of memory, Model B
+is one of the few viable options, at the cost of substantially lower
+accuracy. The gap between the two could be reduced by techniques such as
+knowledge distillation from a SOTA teacher into the small model, data
+augmentation, a moderately higher input resolution for Model B, or
+compressing the SOTA models through 8-bit quantization and reduced width
+multipliers.
 
 % End of document
 \end{document}
