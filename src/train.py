@@ -4,8 +4,8 @@ from torch import optim
 from src import WasteImageNN
 from src import plot_training_loss
 from src import train_loader, test_loader, val_loader
-
-
+from src import evaluate_test
+from pathlib import Path
 
 def train(model, train_loader, val_loader, num_ephohs, lr):
     """
@@ -91,5 +91,9 @@ if __name__ == "__main__":
     model = WasteImageNN()
     train_loss, validation_loss = train(model=model, train_loader=train_loader, val_loader=val_loader, num_ephohs=20, lr=1e-3)
     plot_training_loss(train_losses=train_loss, validation_losses=validation_loss)
-    # test_acc = evaluate_test(model=model, test_loader=test_loader)
-    
+    # save model
+    torch.save(model.state_dict(), Path("../models/model_A.pth"))
+    print(f"Model Saved Successfully")
+    # evaluvate test data
+    test_acc = evaluate_test(model=model, test_loader=test_loader)
+
