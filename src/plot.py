@@ -1,24 +1,28 @@
-from src import plot_cm_marices
 import matplotlib.pyplot as plt
 import numpy as np
 
 ## Helper functions
-def plot_training_loss(train_losses, validation_losses):
-    """Plot training loss."""
+def plot_training_loss(train_losses, validation_losses, title='Training Loss', save_path=None):
+    """Plot training vs validation loss. Saves to save_path if given."""
 
     plt.figure(figsize=(10, 5))
 
     epochs = range(1, len(train_losses)+1)
-    plt.plot(epochs,train_losses, marker='o', label="Train_loss")
+    plt.plot(epochs,train_losses, marker='o', label="Train loss")
     plt.plot(epochs,validation_losses, marker='s', label="Validation loss")
 
     plt.xlabel('Epoch')
     plt.ylabel('Loss')
-    plt.title('Training Loss')
+    plt.title(title)
+    plt.legend()
     plt.grid(True, alpha=0.3)
+    if save_path is not None:
+        plt.savefig(save_path, dpi=150, bbox_inches="tight")
+        print(f"Saved figure : {save_path}")
     plt.show()
+    plt.close()
 
-def plot_cm_marices(cm, class_names=None):
+def plot_cm_marices(cm, class_names=None, title=None, save_path=None):
     if class_names is None:
         class_names = [str(i) for i in range(cm.shape[0])]
 
@@ -32,7 +36,7 @@ def plot_cm_marices(cm, class_names=None):
         (cm_norm, "Confusion Matrix (% of true class)", ".1f"),
     ]
 
-    for ax, (matrix, title, fmt) in zip(axes, panels):
+    for ax, (matrix, panel_title, fmt) in zip(axes, panels):
         im = ax.imshow(matrix, cmap="Blues")
         fig.colorbar(im, ax=ax, fraction=0.046, pad=0.04)
 
@@ -42,7 +46,7 @@ def plot_cm_marices(cm, class_names=None):
         ax.set_yticklabels(class_names)
         ax.set_xlabel("Predicted label")
         ax.set_ylabel("True label")
-        ax.set_title(title)
+        ax.set_title(panel_title)
 
         # write the value in each cell, white text on dark cells
         threshold = matrix.max() / 2
@@ -52,6 +56,12 @@ def plot_cm_marices(cm, class_names=None):
                         ha="center", va="center", fontsize=9,
                         color="white" if matrix[i, j] > threshold else "black")
 
+    if title is not None:
+        fig.suptitle(title, fontsize=14)
     plt.tight_layout()
+    if save_path is not None:
+        fig.savefig(save_path, dpi=150, bbox_inches="tight")
+        print(f"Saved figure : {save_path}")
     plt.show()
+    plt.close(fig)
 

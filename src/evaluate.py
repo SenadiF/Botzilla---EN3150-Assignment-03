@@ -8,8 +8,8 @@ from sklearn.metrics import (
 )
 
 # evaluvate test
-def evaluate_test(model, test_loader):
-    """Evaluate model on test set."""
+def evaluate_test(model, test_loader, cm_title=None, cm_save_path=None):
+    """Evaluate model on test set. Saves the confusion matrix to cm_save_path if given."""
     # Check for GPU
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     model = model.to(device)
@@ -45,7 +45,8 @@ def evaluate_test(model, test_loader):
     print(f"CM : {cm}")
     print(f"{'='*50}")
     # test_loader.dataset is a Subset -> .dataset is the RealWasteDataset
-    plot_cm_marices(cm, class_names=test_loader.dataset.dataset.classes)
+    plot_cm_marices(cm, class_names=test_loader.dataset.dataset.classes,
+                    title=cm_title, save_path=cm_save_path)
 
     # Overall Precision
     precision = precision_score(

@@ -1,5 +1,5 @@
 import torch.nn as nn
-from src import DepthwiseSeparableConv
+from .DepthwiseSeparableConv import DepthwiseSeparableConv
 
 # CNN - Depth wise separable : 100k parameters
 class WasteImageNNLight(nn.Module):

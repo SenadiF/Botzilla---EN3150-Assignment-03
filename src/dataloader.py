@@ -2,7 +2,7 @@ from pathlib import Path
 from sklearn.model_selection import train_test_split
 from torch.utils.data import DataLoader, Subset
 from torchvision import transforms
-from src import RealWasteDataset
+from .dataset import RealWasteDataset
 
 
 DATA_DIR = Path(__file__).resolve().parent.parent / "data"
