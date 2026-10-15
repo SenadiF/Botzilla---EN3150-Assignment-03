@@ -2,10 +2,12 @@ import torch
 import torch.nn as nn
 from torch import optim
 from src import WasteImageNN
+from src import WasteImageNNLight
 from src import plot_training_loss
 from src import train_loader, test_loader, val_loader
 from src import evaluate_test
 from pathlib import Path
+import time 
 
 def train(model, train_loader, val_loader, num_ephohs, lr):
     """
@@ -88,8 +90,12 @@ def train(model, train_loader, val_loader, num_ephohs, lr):
 
 
 if __name__ == "__main__":
+    # CNN - Model A
     model = WasteImageNN()
+    start_time_model_A = time.perf_counter()
     train_loss, validation_loss = train(model=model, train_loader=train_loader, val_loader=val_loader, num_ephohs=20, lr=1e-3)
+    end_time_model_A = time.perf_counter()
+    print(f"Training time : {end_time_model_A-start_time_model_A}")
     plot_training_loss(train_losses=train_loss, validation_losses=validation_loss)
     # save model
     torch.save(model.state_dict(), Path("../models/model_A.pth"))
@@ -97,3 +103,14 @@ if __name__ == "__main__":
     # evaluvate test data
     test_acc = evaluate_test(model=model, test_loader=test_loader)
 
+    # Depthwise Separable CNN
+    model_light = WasteImageNNLight()
+    start_time_model_B = time.perf_counter()
+    train_loss_, validation_loss_ = train(model=model, train_loader=train_loader, val_loader=val_loader, num_ephohs=20, lr=1e-3)
+    end_time_model_B = time.perf_counter()
+    plot_training_loss(train_losses=train_loss_, validation_losses=validation_loss_)
+    # save model
+    torch.save(model.state_dict(), Path("../models/model_B_light.pth"))
+    print(f"Model Saved Successfully")
+    # evaluvate test data
+    test_acc = evaluate_test(model=model_light, test_loader=test_loader)

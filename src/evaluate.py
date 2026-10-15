@@ -1,6 +1,13 @@
 import torch
+from src import plot_cm_marices
+from sklearn.metrics import (
+    confusion_matrix,
+    classification_report,
+    precision_score,
+    recall_score
+)
 
-# evaluvate test 
+# evaluvate test
 def evaluate_test(model, test_loader):
     """Evaluate model on test set."""
     # Check for GPU
@@ -11,6 +18,9 @@ def evaluate_test(model, test_loader):
     correct = 0
     total = 0
 
+    all_predictions = []
+    all_labels = []
+
     with torch.no_grad():
         for batch_x, batch_y in test_loader:
             # Move data to device
@@ -18,12 +28,43 @@ def evaluate_test(model, test_loader):
 
             outputs = model(batch_x)
             _, predicted = torch.max(outputs, 1)
+            all_predictions.extend(predicted.cpu().numpy())
+            all_labels.extend(batch_y.cpu().numpy())
             total += batch_y.size(0)
             correct += (predicted == batch_y).sum().item()
 
+    # Accuracy 
     test_accuracy = 100 * correct / total
     print(f"\n{'='*50}")
-    print(f"TEST ACCURACY: {test_accuracy:.2f}%")
+    print(f"TEST ACCURACY: {test_accuracy:.4f}%")
     print(f"{'='*50}")
 
-    return test_accuracy
+    # confusion matrix 
+    cm = confusion_matrix(all_labels, all_predictions)
+    print(f"\n{'='*50}")
+    print(f"CM : {cm}")
+    print(f"{'='*50}")
+    # test_loader.dataset is a Subset -> .dataset is the RealWasteDataset
+    plot_cm_marices(cm, class_names=test_loader.dataset.dataset.classes)
+
+    # Overall Precision
+    precision = precision_score(
+        all_labels,
+        all_predictions,
+        average="weighted"
+    )
+    print(f"\n{'='*50}")
+    print(f"Precision: {precision:.4f}%")
+    print(f"{'='*50}")
+    
+    # Overall Recall
+    recall = recall_score(
+        all_labels,
+        all_predictions,
+        average="weighted"
+    )
+    print(f"\n{'='*50}")
+    print(f"Recall: {recall:.4f}%")
+    print(f"{'='*50}")
+
+    return test_accuracy, cm, precision, recall
