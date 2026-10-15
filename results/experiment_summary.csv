@@ -1,0 +1,2 @@
+Model,Accuracy_mean,Accuracy_std,Weighted Precision_mean,Weighted Precision_std,Weighted Recall_mean,Weighted Recall_std,Weighted F1_mean,Weighted F1_std,Training Time (seconds)_mean,Training Time (seconds)_std
+Model B,63.113604488078536,3.6249222954614524,0.6396841169662132,0.03224702568699034,0.6311360448807853,0.036249222954614545,0.6175136903555571,0.03766685415006773,812.7626604199992,38.93041421324701

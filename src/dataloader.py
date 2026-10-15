@@ -7,7 +7,7 @@ from src import RealWasteDataset
 
 DATA_DIR = Path(__file__).resolve().parent.parent / "data"
 manifest = DATA_DIR / "realwaste_data.csv"
-dataset_root = DATA_DIR / "RealWasteData/realwaste-main/RealWaste"
+dataset_root = DATA_DIR / "RealWaste"
 
 base = RealWasteDataset(manifest, dataset_root)
 # targets

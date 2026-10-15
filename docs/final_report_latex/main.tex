@@ -53,33 +53,40 @@
 
 \begin{titlepage}
     \begin{center}
-        \vspace*{0.01cm}
         \LARGE
         \textbf{Department of Electronic and Telecommunication Engineering\\
         University of Moratuwa}
-        
-        \vspace{1.2cm}
-        \LARGE
+
+        \vspace{0.8cm}
         \textbf{EN3150 - Pattern Recognition}
-        
-        \vspace{1.0cm}
 
-        \includegraphics[width=0.4\textwidth]{university.jpeg}
+        \vfill
+        \includegraphics[width=0.3\textwidth]{university.jpeg}
+        \vfill
 
-        \vspace{1.5cm}
-        \LARGE
         Assignment 03 \\
         Simple convolutional neural network to perform classification
-        \vspace{5cm}
-        
+
+        \vfill
+
+        \Large
+        \textbf{Group: Botzilla}
+
+        \vspace{0.5cm}
+
         \begin{tabular}{cc}
-            \Large 230415H & \Large Mudaliarachchi N.S. \\
-            \Large 230185B    & \Large FERNANDO S.D.     \\
+            230415H & Mudaliarachchi N.S. \\
+            230185B & Fernando S.D.       \\
         \end{tabular}
 
-    \end{center}
-    \begin{center}
-    \small 05/09/2026
+        \vfill
+
+        \normalsize
+        GitHub repository: \\
+        \url{https://github.com/SenadiF/Botzilla---EN3150-Assignment-03.git}
+
+        \vspace{0.8cm}
+        \small 05/09/2026
     \end{center}
 \end{titlepage}
 \newpage
@@ -88,11 +95,74 @@
 \tableofcontents
 \newpage
 
+\listoffigures
 \listoftables
 \newpage
 
 
 \section{Resource-Constrained CNN for Edge Image Classification}
+
+\subsection{Dataset and Class Imbalance Handling}
+
+All models in this report were trained and evaluated on the RealWaste
+dataset, which contains 4,752 colour images of waste items in nine
+categories. The dataset is not balanced: as shown in
+Table~\ref{tab:class_distribution}, Plastic is the largest class with
+921 images (19.4\%), while Textile Trash is the smallest with 318 images
+(6.7\%), giving an imbalance ratio of about $2.9:1$.
+
+\begin{table}[H]
+\centering
+\caption{Class distribution of the RealWaste dataset and the test split}
+\label{tab:class_distribution}
+\begin{tabular}{lccc}
+\hline
+\textbf{Class} & \textbf{Images} & \textbf{Proportion} & \textbf{Test Samples} \\
+\hline
+Cardboard & 461 & 9.7\% & 69 \\
+Food Organics & 411 & 8.6\% & 62 \\
+Glass & 420 & 8.8\% & 63 \\
+Metal & 790 & 16.6\% & 118 \\
+Miscellaneous Trash & 495 & 10.4\% & 75 \\
+Paper & 500 & 10.5\% & 75 \\
+Plastic & 921 & 19.4\% & 138 \\
+Textile Trash & 318 & 6.7\% & 48 \\
+Vegetation & 436 & 9.2\% & 65 \\
+\hline
+\textbf{Total} & \textbf{4,752} & \textbf{100\%} & \textbf{713} \\
+\hline
+\end{tabular}
+\end{table}
+
+If this imbalance is ignored, a model can reach a reasonable overall
+accuracy while performing poorly on the smaller classes, because the
+larger classes contribute more to the training loss. The imbalance was
+handled at two stages.
+
+\paragraph{Data splitting.} The dataset was divided into training
+(70\%, 3,326 images), validation (15\%, 713 images) and test (15\%,
+713 images) subsets using stratified splitting. Stratification keeps the
+proportion of each class the same in all three subsets as in the full
+dataset, so that every class is represented in the validation and test
+sets, and the evaluation results are not distorted by an uneven split.
+The same split was used for every model in this report.
+
+\paragraph{Training.} During training, class weights were applied in the
+cross-entropy loss so that errors on the smaller classes are penalized
+more heavily. Balanced class weights were used, computed from the
+training set as
+\begin{equation}
+w_c = \frac{N}{K\,n_c},
+\end{equation}
+where $N$ is the number of training images, $K=9$ is the number of
+classes and $n_c$ is the number of training images in class $c$. A class
+with fewer samples therefore receives a larger weight; for example,
+Textile Trash receives a weight of about 1.66 and Plastic about 0.57.
+% CHECK: confirm this matches the class-weight formula used in the code.
+
+Because the classes are not equally sized, weighted precision, recall and
+F1-score are reported in addition to accuracy, and class-wise results are
+given for every model.
 
 
 \subsection{Model A -- Standard CNN}
@@ -276,126 +346,202 @@ Model A was trained for 20 epochs using the Adam optimizer with a learning
 rate of 0.001, which was selected during the optimizer tuning experiments.
 The images were resized to $64\times64$ pixels, the stratified
 training, validation, and test split was used, and a batch size of 64 was
-used during training. Training and validation losses were recorded at the
-end of each epoch to monitor convergence. The resulting loss curves are
-shown in Figure~\ref{fig:model_a_loss}.
+used during training.
+
+Because the weight initialization and the order of the mini-batches are
+random, a single training run can give an optimistic or pessimistic
+picture of the model. Model A was therefore trained five independent
+times, each from a new random initialization with a different random
+seed, while the data split, preprocessing and hyperparameters were kept
+fixed. Each trained model was evaluated on the same test set of 713
+images. Results are reported as the mean $\pm$ sample standard deviation
+over the five runs,
+
+\begin{equation}
+\bar{x}=\frac{1}{n}\sum_{i=1}^{n}x_i, \qquad
+s=\sqrt{\frac{1}{n-1}\sum_{i=1}^{n}\left(x_i-\bar{x}\right)^2},
+\qquad n=5.
+\end{equation}
+
+Training and validation losses were recorded at the end of every epoch.
+Figure~\ref{fig:model_a_loss} shows the mean loss across the five runs,
+with the shaded region indicating $\pm1$ standard deviation.
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.85\linewidth]{ModelA.png}
-    \caption{Training and validation loss curves for Model A.}
+    \includegraphics[width=0.85\linewidth]{ModelA_loss_mean_std.png}
+    \caption{Training and validation loss of Model A, averaged over five
+    independent runs. Shaded bands show $\pm1$ standard deviation.}
     \label{fig:model_a_loss}
 \end{figure}
 
-After training, Model A was evaluated using the test dataset containing
-713 images. The model achieved a test accuracy of \textbf{69.14\%}.
-The weighted precision was \textbf{69.62\%}, while the weighted recall was
-\textbf{69.14\%}. The weighted F1-score was \textbf{68.69\%}.
+The training loss decreased steadily from about 2.05 to 0.67, and the
+validation loss decreased from about 1.86 to 0.75, with a narrow spread
+between runs. The validation loss fluctuates more than the training loss
+in the final epochs, and the gap between the two begins to widen slightly,
+suggesting that the model is close to the point where further training
+without regularization would lead to overfitting.
+
+The test results of the individual runs are listed in
+Table~\ref{tab:model_a_runs}.
 
 \begin{table}[H]
 \centering
-\caption{Overall Test Performance of Model A}
+\caption{Test performance of Model A over five independent runs}
+\label{tab:model_a_runs}
+\resizebox{\textwidth}{!}{
+\begin{tabular}{cccccc}
+\hline
+\textbf{Run} & \textbf{Accuracy (\%)} & \textbf{W. Precision} &
+\textbf{W. Recall} & \textbf{W. F1} & \textbf{Train Time (s)} \\
+\hline
+1 & 72.93 & 0.7206 & 0.7293 & 0.7208 & 745.82 \\
+2 & 71.39 & 0.7224 & 0.7139 & 0.7154 & 876.61 \\
+3 & 69.71 & 0.7082 & 0.6971 & 0.6940 & 884.21 \\
+4 & 69.99 & 0.6981 & 0.6999 & 0.6970 & 880.30 \\
+5 & 72.79 & 0.7427 & 0.7279 & 0.7290 & 900.18 \\
+\hline
+\textbf{Mean $\pm$ SD} & \textbf{71.36 $\pm$ 1.51} & \textbf{0.7184 $\pm$ 0.0168}
+& \textbf{0.7136 $\pm$ 0.0151} & \textbf{0.7112 $\pm$ 0.0152}
+& \textbf{857.4 $\pm$ 63.0} \\
+\hline
+\end{tabular}
+}
+\end{table}
+
+Over the five runs, Model A achieved a mean test accuracy of
+\textbf{71.36 $\pm$ 1.51\%}, a mean weighted precision of
+\textbf{71.84 $\pm$ 1.68\%}, a mean weighted recall of
+\textbf{71.36 $\pm$ 1.51\%}, and a mean weighted F1-score of
+\textbf{71.12 $\pm$ 1.52\%}. Test accuracy ranged from 69.71\% to
+72.93\%, so the model's performance was consistent across random
+initializations. The mean training time was $857.4\pm63.0$\,s for 20
+epochs on a CPU, or about $42.9\pm3.2$\,s per epoch.
+
+\begin{table}[H]
+\centering
+\caption{Overall Test Performance of Model A (mean $\pm$ SD, $n=5$)}
 \label{tab:model_a_overall}
 \begin{tabular}{lc}
 \hline
 \textbf{Metric} & \textbf{Model A} \\
 \hline
-Test Accuracy & 69.14\% \\
-Weighted Precision & 69.62\% \\
-Weighted Recall & 69.14\% \\
-Weighted F1-score & 68.69\% \\
+Test Accuracy & 71.36 $\pm$ 1.51\% \\
+Weighted Precision & 71.84 $\pm$ 1.68\% \\
+Weighted Recall & 71.36 $\pm$ 1.51\% \\
+Weighted F1-score & 71.12 $\pm$ 1.52\% \\
+Training Time per Epoch & 42.9 $\pm$ 3.2\,s \\
 Test Samples & 713 \\
 \hline
 \end{tabular}
 \end{table}
 
-The class-wise precision, recall, and F1-score obtained on the test
-dataset are presented in Table~\ref{tab:model_a_classwise}.
+Each of the five trained models was also evaluated class by class. The
+class-wise precision, recall and F1-score, averaged over the five runs,
+are given in Table~\ref{tab:model_a_classwise}.
 
 \begin{table}[H]
 \centering
-\caption{Class-wise Performance of Model A}
+\caption{Class-wise performance of Model A (mean $\pm$ SD, $n=5$)}
 \label{tab:model_a_classwise}
 \small
 \begin{tabular}{lccc}
 \hline
 \textbf{Class} & \textbf{Precision} & \textbf{Recall} & \textbf{F1-score} \\
 \hline
-Cardboard & 0.7606 & 0.7826 & 0.7714 \\
-Food Organics & 0.8478 & 0.6290 & 0.7222 \\
-Glass & 0.6623 & 0.8095 & 0.7286 \\
-Metal & 0.6122 & 0.7627 & 0.6792 \\
-Miscellaneous Trash & 0.4762 & 0.4000 & 0.4348 \\
-Paper & 0.7200 & 0.7200 & 0.7200 \\
-Plastic & 0.7706 & 0.6087 & 0.6802 \\
-Textile Trash & 0.6667 & 0.5833 & 0.6222 \\
-Vegetation & 0.7590 & 0.9692 & 0.8514 \\
+Cardboard & 0.757 $\pm$ 0.021 & 0.785 $\pm$ 0.038 & 0.771 $\pm$ 0.026 \\
+Food Organics & 0.822 $\pm$ 0.045 & 0.755 $\pm$ 0.064 & 0.785 $\pm$ 0.029 \\
+Glass & 0.773 $\pm$ 0.080 & 0.679 $\pm$ 0.052 & 0.719 $\pm$ 0.026 \\
+Metal & 0.692 $\pm$ 0.029 & 0.731 $\pm$ 0.040 & 0.710 $\pm$ 0.014 \\
+Miscellaneous Trash & 0.475 $\pm$ 0.036 & 0.453 $\pm$ 0.123 & 0.458 $\pm$ 0.071 \\
+Paper & 0.795 $\pm$ 0.066 & 0.725 $\pm$ 0.053 & 0.756 $\pm$ 0.027 \\
+Plastic & 0.681 $\pm$ 0.053 & 0.754 $\pm$ 0.067 & 0.712 $\pm$ 0.025 \\
+Textile Trash & 0.683 $\pm$ 0.104 & 0.529 $\pm$ 0.054 & 0.590 $\pm$ 0.033 \\
+Vegetation & 0.873 $\pm$ 0.050 & 0.938 $\pm$ 0.039 & 0.903 $\pm$ 0.021 \\
 \hline
-\textbf{Macro Average} & 0.6973 & 0.6961 & 0.6900 \\
-\textbf{Weighted Average} & 0.6962 & 0.6914 & 0.6869 \\
+\textbf{Macro Average} & 0.728 $\pm$ 0.023 & 0.706 $\pm$ 0.018 & 0.711 $\pm$ 0.016 \\
 \hline
 \end{tabular}
 \end{table}
 
-The confusion matrix obtained from the Model A predictions is presented
-in Table~\ref{tab:model_a_confusion}. The rows represent the actual
-classes, while the columns represent the predicted classes.
+Vegetation was the easiest class in every run (mean F1 0.903), followed
+by Food Organics and Cardboard. Miscellaneous Trash was consistently the
+hardest class (mean F1 0.458), followed by Textile Trash (0.590). These
+two classes also had the largest run-to-run variation: Miscellaneous
+Trash recall ranged from 0.32 to 0.65 across the five runs, which shows
+that the model's handling of this heterogeneous category depends heavily
+on the random initialization.
 
-\begin{table}[H]
-\centering
-\caption{Confusion Matrix of Model A}
-\label{tab:model_a_confusion}
-\small
-\begin{tabular}{lccccccccc}
-\hline
-\textbf{Actual / Pred.}
-& \textbf{C}
-& \textbf{FO}
-& \textbf{G}
-& \textbf{M}
-& \textbf{MT}
-& \textbf{P}
-& \textbf{Pl}
-& \textbf{T}
-& \textbf{V} \\
-\hline
-Cardboard
-& 54 & 2 & 2 & 5 & 2 & 2 & 1 & 0 & 1 \\
-Food Organics
-& 2 & 39 & 0 & 3 & 2 & 0 & 3 & 0 & 13 \\
-Glass
-& 2 & 0 & 51 & 4 & 3 & 0 & 3 & 0 & 0 \\
-Metal
-& 2 & 1 & 2 & 90 & 9 & 5 & 7 & 2 & 0 \\
-Misc. Trash
-& 3 & 3 & 3 & 12 & 30 & 5 & 8 & 6 & 5 \\
-Paper
-& 5 & 0 & 4 & 7 & 1 & 54 & 3 & 1 & 0 \\
-Plastic
-& 3 & 1 & 14 & 20 & 11 & 1 & 84 & 4 & 0 \\
-Textile Trash
-& 0 & 0 & 1 & 6 & 4 & 8 & 0 & 28 & 1 \\
-Vegetation
-& 0 & 0 & 0 & 0 & 1 & 0 & 0 & 1 & 63 \\
-\hline
-\end{tabular}
+To show where the errors occur, the confusion matrices of the five runs
+were averaged. Since every run was evaluated on the same 713 test
+images, the matrices can be averaged cell by cell. The result is shown
+in Figure~\ref{fig:model_a_confusion}. Rows represent the actual classes
+and columns the predicted classes. The left panel shows the mean count
+per cell, and the right panel normalizes each row by the number of
+samples in that class, so the diagonal gives the mean recall of each
+class and classes of different sizes can be compared fairly; the value
+below each percentage is its standard deviation across runs. The
+confusion matrices of the individual runs are given in
+Section~\ref{sec:runs_a}.
 
-\vspace{2mm}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\linewidth]{ModelA_confusion_avg.png}
+    \caption{Confusion matrix of Model A on the test set, averaged over
+    five runs: mean counts (left) and mean percentage of each true class
+    with standard deviation (right).}
+    \label{fig:model_a_confusion}
+\end{figure}
 
-\footnotesize
-C = Cardboard, FO = Food Organics, G = Glass, M = Metal,
-MT = Miscellaneous Trash, P = Paper, Pl = Plastic,
-T = Textile Trash, V = Vegetation.
+% TODO: add 1-2 sentences on the largest average confusions, using the
+% "Largest average confusions" lines printed by average_confusion.py
+% (e.g. "On average, x% of Plastic samples were predicted as Metal").
 
-\end{table}
+Individual runs can differ noticeably from this average. For example,
+Miscellaneous Trash recall was 65.3\% (49 of 75) in Run 2
+(Figure~\ref{fig:model_a_run2}) but only 32.0\% (24 of 75) in Run 1,
+against a five-run mean of 45.3\%. A single confusion matrix can
+therefore over- or under-state the difficulty of individual classes,
+which is why the averaged results are used for the overall conclusions.
 
-The confusion matrix shows that Model A performed particularly well on the
-Vegetation class, correctly classifying 63 out of 65 samples. The
-Miscellaneous Trash class was more difficult to classify, with 30 out of
-75 samples correctly classified. Misclassifications were also observed
-between visually similar categories such as Plastic, Metal, and
-Miscellaneous Trash.
 
+\subsubsection{Confusion Matrices of Individual Runs -- Model A}
+\label{sec:runs_a}
+
+The confusion matrices of the five individual runs of Model A are shown
+below. Each figure shows raw counts (left) and the percentage of each
+true class (right).
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\linewidth]{ModelA_confusion_run1.png}
+    \caption{Model A, Run 1 (test accuracy 72.93\%).}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\linewidth]{ModelA_confusion_run2.png}
+    \caption{Model A, Run 2 (test accuracy 71.39\%).}
+    \label{fig:model_a_run2}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\linewidth]{ModelA_confusion_run3.png}
+    \caption{Model A, Run 3 (test accuracy 69.71\%).}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\linewidth]{ModelA_confusion_run4.png}
+    \caption{Model A, Run 4 (test accuracy 69.99\%).}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\linewidth]{ModelA_confusion_run5.png}
+    \caption{Model A, Run 5 (test accuracy 72.79\%).}
+\end{figure}
 
 \subsection{Model B -- Lightweight CNN}
 
@@ -552,137 +698,198 @@ during training.
 
 Model B was trained for 20 epochs using the Adam optimizer with a
 learning rate of $0.001$, using the same $64\times64$ input size,
-stratified data split, and batch size of 64 as Model A. During
-training, the average training loss decreased from 2.0007 in the first
-epoch to 1.0349 in the final epoch. The validation loss decreased from
-1.8015 to 1.0420, indicating that the model learned useful features
-from the training data.
+stratified data split, and batch size of 64 as Model A. Following the
+same protocol as Model A, Model B was trained five independent times
+with random seeds 1001--1005, and each run was evaluated on the same
+713-image test set.
 
-The training and validation loss curves are shown in
-Figure~\ref{fig:model_b_loss}.
+The mean training and validation loss over the five runs is shown in
+Figure~\ref{fig:model_b_loss}, with the shaded region indicating
+$\pm1$ standard deviation.
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.85\linewidth]{B1.png}
-    \caption{Training and validation loss curves for Model B after
-    20 epochs.}
+    \includegraphics[width=0.85\linewidth]{ModelB_loss_mean_std.png}
+    \caption{Training and validation loss of Model B, averaged over five
+    independent runs. Shaded bands show $\pm1$ standard deviation.}
     \label{fig:model_b_loss}
 \end{figure}
 
-After training, Model B was evaluated on the test dataset containing
-713 images. It achieved a test accuracy of \textbf{61.85\%}, a weighted
-precision of \textbf{61.92\%}, a weighted recall of \textbf{61.85\%},
-and a weighted F1-score of \textbf{59.09\%}. The results are summarized
-in Table~\ref{tab:model_b_overall}.
+The mean training loss decreased from about 2.02 to 1.04, and the mean
+validation loss decreased from about 1.85 to 1.04. Two observations
+stand out when compared with Model A. First, the final losses are
+considerably higher than Model A's (about 0.67 training and 0.75
+validation), and the training and validation curves stay close together
+throughout. This indicates that Model B is underfitting rather than
+overfitting: its limited capacity, together with dropout, prevents it
+from fitting the training data closely, and the training loss is still
+decreasing at epoch 20, so additional epochs would likely improve it.
+Second, the validation loss is much noisier and its standard deviation
+band is wider than Model A's. Three of the five runs showed a sharp,
+temporary increase in validation loss at epoch 15, which produces the
+spike in the mean curve. The final validation loss also varied more
+between runs ($1.04\pm0.07$), which is consistent with the larger spread
+in Model B's test accuracy.
+
+The test results of the individual runs are listed in
+Table~\ref{tab:model_b_runs}.
 
 \begin{table}[H]
 \centering
-\caption{Overall Test Performance of Model B}
+\caption{Test performance of Model B over five independent runs}
+\label{tab:model_b_runs}
+\resizebox{\textwidth}{!}{
+\begin{tabular}{ccccccc}
+\hline
+\textbf{Run} & \textbf{Seed} & \textbf{Accuracy (\%)} & \textbf{W. Precision} &
+\textbf{W. Recall} & \textbf{W. F1} & \textbf{Train Time (s)} \\
+\hline
+1 & 1001 & 67.74 & 0.6825 & 0.6774 & 0.6730 & 830.97 \\
+2 & 1002 & 63.53 & 0.6515 & 0.6353 & 0.6225 & 813.51 \\
+3 & 1003 & 57.78 & 0.5961 & 0.5778 & 0.5698 & 745.62 \\
+4 & 1004 & 64.38 & 0.6446 & 0.6438 & 0.6216 & 831.36 \\
+5 & 1005 & 62.13 & 0.6237 & 0.6213 & 0.6007 & 842.35 \\
+\hline
+\multicolumn{2}{c}{\textbf{Mean $\pm$ SD}} & \textbf{63.11 $\pm$ 3.62}
+& \textbf{0.6397 $\pm$ 0.0322} & \textbf{0.6311 $\pm$ 0.0362}
+& \textbf{0.6175 $\pm$ 0.0377} & \textbf{812.8 $\pm$ 38.9} \\
+\hline
+\end{tabular}
+}
+\end{table}
+
+Over the five runs, Model B achieved a mean test accuracy of
+\textbf{63.11 $\pm$ 3.62\%}, a mean weighted precision of
+\textbf{63.97 $\pm$ 3.22\%}, a mean weighted recall of
+\textbf{63.11 $\pm$ 3.62\%}, and a mean weighted F1-score of
+\textbf{61.75 $\pm$ 3.77\%}. Test accuracy ranged from 57.78\% to
+67.74\%. The standard deviation is more than twice that of Model A,
+which indicates that the small model is more sensitive to its random
+initialization and that 20 epochs is not always enough for it to converge
+to a good solution.
+
+\begin{table}[H]
+\centering
+\caption{Overall Test Performance of Model B (mean $\pm$ SD, $n=5$)}
 \label{tab:model_b_overall}
 \begin{tabular}{lc}
 \hline
 \textbf{Metric} & \textbf{Model B} \\
 \hline
-Test Accuracy & 61.85\% \\
-Weighted Precision & 61.92\% \\
-Weighted Recall & 61.85\% \\
-Weighted F1-score & 59.09\% \\
+Test Accuracy & 63.11 $\pm$ 3.62\% \\
+Weighted Precision & 63.97 $\pm$ 3.22\% \\
+Weighted Recall & 63.11 $\pm$ 3.62\% \\
+Weighted F1-score & 61.75 $\pm$ 3.77\% \\
+Training Time per Epoch & 40.6 $\pm$ 1.9\,s \\
 Test Samples & 713 \\
 \hline
 \end{tabular}
 \end{table}
 
-The class-wise precision, recall, and F1-score are presented in
-Table~\ref{tab:model_b_classwise}.
+The class-wise precision, recall and F1-score of Model B, averaged over
+the five runs, are given in Table~\ref{tab:model_b_classwise}.
 
 \begin{table}[H]
 \centering
-\caption{Class-wise Performance of Model B}
+\caption{Class-wise performance of Model B (mean $\pm$ SD, $n=5$)}
 \label{tab:model_b_classwise}
 \small
 \begin{tabular}{lccc}
 \hline
-\textbf{Class} & \textbf{Precision} & \textbf{Recall} &
-\textbf{F1-score} \\
+\textbf{Class} & \textbf{Precision} & \textbf{Recall} & \textbf{F1-score} \\
 \hline
-Cardboard & 0.9423 & 0.7101 & 0.8099 \\
-Food Organics & 0.6757 & 0.8065 & 0.7353 \\
-Glass & 0.5882 & 0.6349 & 0.6107 \\
-Metal & 0.5145 & 0.7542 & 0.6117 \\
-Miscellaneous Trash & 0.3000 & 0.0800 & 0.1263 \\
-Paper & 0.6579 & 0.6667 & 0.6623 \\
-Plastic & 0.5542 & 0.6667 & 0.6053 \\
-Textile Trash & 0.8000 & 0.1667 & 0.2759 \\
-Vegetation & 0.7703 & 0.8769 & 0.8201 \\
+Cardboard & 0.809 $\pm$ 0.053 & 0.786 $\pm$ 0.052 & 0.795 $\pm$ 0.020 \\
+Food Organics & 0.768 $\pm$ 0.043 & 0.790 $\pm$ 0.127 & 0.777 $\pm$ 0.081 \\
+Glass & 0.790 $\pm$ 0.044 & 0.492 $\pm$ 0.050 & 0.604 $\pm$ 0.037 \\
+Metal & 0.581 $\pm$ 0.076 & 0.649 $\pm$ 0.165 & 0.594 $\pm$ 0.064 \\
+Miscellaneous Trash & 0.404 $\pm$ 0.059 & 0.277 $\pm$ 0.125 & 0.313 $\pm$ 0.096 \\
+Paper & 0.613 $\pm$ 0.101 & 0.613 $\pm$ 0.030 & 0.609 $\pm$ 0.054 \\
+Plastic & 0.574 $\pm$ 0.066 & 0.730 $\pm$ 0.040 & 0.639 $\pm$ 0.025 \\
+Textile Trash & 0.509 $\pm$ 0.149 & 0.246 $\pm$ 0.101 & 0.311 $\pm$ 0.085 \\
+Vegetation & 0.837 $\pm$ 0.078 & 0.920 $\pm$ 0.048 & 0.873 $\pm$ 0.030 \\
 \hline
-Macro Average & 0.6448 & 0.5959 & 0.5842 \\
-Weighted Average & 0.6192 & 0.6185 & 0.5909 \\
+\textbf{Macro Average} & 0.654 $\pm$ 0.040 & 0.612 $\pm$ 0.035 & 0.613 $\pm$ 0.038 \\
 \hline
 \end{tabular}
 \end{table}
 
-The confusion matrix obtained from the test predictions is presented
-in Table~\ref{tab:model_b_confusion}. Rows represent the actual
-classes, while columns represent the predicted classes.
+As for Model A, the confusion matrices of the five runs were averaged
+cell by cell; the result is shown in Figure~\ref{fig:model_b_confusion}.
+The individual runs are given in Section~\ref{sec:runs_b}.
 
-\begin{table}[H]
-\centering
-\caption{Confusion Matrix of Model B}
-\label{tab:model_b_confusion}
-\resizebox{\textwidth}{!}{
-\begin{tabular}{lccccccccc}
-\hline
-\textbf{Actual / Pred.}
-& \textbf{C} & \textbf{FO} & \textbf{G} & \textbf{M}
-& \textbf{MT} & \textbf{P} & \textbf{Pl} & \textbf{T} & \textbf{V} \\
-\hline
-Cardboard
-& 49 & 1 & 2 & 2 & 0 & 7 & 8 & 0 & 0 \\
-Food Organics
-& 0 & 50 & 0 & 1 & 0 & 0 & 6 & 0 & 5 \\
-Glass
-& 0 & 1 & 40 & 14 & 1 & 0 & 7 & 0 & 0 \\
-Metal
-& 0 & 1 & 4 & 89 & 2 & 2 & 20 & 0 & 0 \\
-Misc. Trash
-& 0 & 8 & 9 & 22 & 6 & 5 & 17 & 2 & 6 \\
-Paper
-& 3 & 1 & 5 & 8 & 0 & 50 & 8 & 0 & 0 \\
-Plastic
-& 0 & 7 & 7 & 27 & 3 & 2 & 92 & 0 & 0 \\
-Textile Trash
-& 0 & 0 & 0 & 9 & 7 & 10 & 8 & 8 & 6 \\
-Vegetation
-& 0 & 5 & 1 & 1 & 1 & 0 & 0 & 0 & 57 \\
-\hline
-\end{tabular}
-}
-\vspace{2mm}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\linewidth]{ModelB_confusion_avg.png}
+    \caption{Confusion matrix of Model B on the test set, averaged over
+    five runs: mean counts (left) and mean percentage of each true class
+    with standard deviation (right).}
+    \label{fig:model_b_confusion}
+\end{figure}
 
-\footnotesize
-C = Cardboard, FO = Food Organics, G = Glass, M = Metal,
-MT = Miscellaneous Trash, P = Paper, Pl = Plastic,
-T = Textile Trash, V = Vegetation.
-\end{table}
+% TODO: add 1-2 sentences on the largest average confusions, using the
+% "Largest average confusions" lines printed by average_confusion.py.
 
-The results show that Model B performed relatively well on the
-Vegetation and Cardboard categories, achieving F1-scores of 0.8201
-and 0.8099, respectively. Food Organics also achieved a recall of
-0.8065. However, classification performance varied considerably
-across the nine categories.
+Across the five runs, Model B performed best on Vegetation, Cardboard
+and Food Organics (mean F1 0.873, 0.795 and 0.777). Its weakest classes
+were the same as Model A's, but with much lower scores: Miscellaneous
+Trash (mean F1 0.313) and Textile Trash (0.311), with mean recalls of
+only 0.277 and 0.246. Glass also had low recall (0.492) despite high
+precision (0.790), meaning that the model rarely predicted Glass
+wrongly but missed about half of the actual Glass samples. Model B's
+class-level results also varied much more between runs than Model A's:
+Metal recall ranged from 0.37 to 0.77 and Miscellaneous Trash recall
+from 0.13 to 0.44.
 
-Miscellaneous Trash was the most difficult category, with only
-6 out of 75 samples correctly classified, resulting in a recall of
-0.0800. Textile Trash also showed low recall, with 8 out of 48
-samples correctly classified. Several Metal and Plastic samples
-were confused with one another, while Miscellaneous Trash was
-frequently predicted as Metal or Plastic.
+The individual runs show the same pattern. In Run 2
+(Figure~\ref{fig:model_b_run2}), for example, Cardboard
+(57 of 69, 82.6\%) and Food Organics (55 of 62, 88.7\%) were classified
+well, whereas only 7 of 48 Textile Trash samples (14.6\%), 25 of 75
+Miscellaneous Trash samples (33.3\%) and 30 of 63 Glass samples
+(47.6\%) were correct.
 
 These results indicate that the lightweight architecture learned
 useful visual features but had difficulty distinguishing some
 visually similar waste categories. The relatively small number of
 trainable parameters reduces model complexity, but it may also
 limit the capacity to learn more discriminative features.
+
+\subsubsection{Confusion Matrices of Individual Runs -- Model B}
+\label{sec:runs_b}
+
+The confusion matrices of the five individual runs of Model B are shown
+below. Each figure shows raw counts (left) and the percentage of each
+true class (right).
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\linewidth]{ModelB_confusion_run1.png}
+    \caption{Model B, Run 1, seed 1001 (test accuracy 67.74\%).}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\linewidth]{ModelB_confusion_run2.png}
+    \caption{Model B, Run 2, seed 1002 (test accuracy 63.53\%).}
+    \label{fig:model_b_run2}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\linewidth]{ModelB_confusion_run3.png}
+    \caption{Model B, Run 3, seed 1003 (test accuracy 57.78\%).}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\linewidth]{ModelB_confusion_run4.png}
+    \caption{Model B, Run 4, seed 1004 (test accuracy 64.38\%).}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\linewidth]{ModelB_confusion_run5.png}
+    \caption{Model B, Run 5, seed 1005 (test accuracy 62.13\%).}
+\end{figure}
 
 % =====================================================================
 % COMPARISON A vs B
@@ -698,10 +905,12 @@ multiply--accumulate operations (MACs) per image was also calculated
 analytically from the layer dimensions as an indicator of computational
 cost.
 
-% TODO: Fill in the measured training time per epoch for both models.
+Accuracy, F1-score and training time are reported as mean $\pm$
+standard deviation over five independent runs of each model.
+
 \begin{table}[H]
 \centering
-\caption{Comparison of Model A and Model B}
+\caption{Comparison of Model A and Model B (performance metrics: mean $\pm$ SD, $n=5$)}
 \label{tab:model_ab_comparison}
 \begin{tabular}{lcc}
 \hline
@@ -711,12 +920,21 @@ Convolution Type & Standard & Depthwise-separable \\
 Total Trainable Parameters & 1,439,561 & 47,210 \\
 Estimated Model Size on Disk (KB) & 5,623.3 & 184.4 \\
 Approx. MACs per Image & 61.2 M & 5.18 M \\
-Training Time per Epoch (s) & -- & 28.3s \\
-Test Accuracy & 69.14\% & 61.85\% \\
-Weighted F1-score & 68.69\% & 59.09\% \\
+Training Time per Epoch (s, CPU) & 42.9 $\pm$ 3.2 & 40.6 $\pm$ 1.9 \\
+Test Accuracy & 71.36 $\pm$ 1.51\% & 63.11 $\pm$ 3.62\% \\
+Weighted F1-score & 71.12 $\pm$ 1.52\% & 61.75 $\pm$ 3.77\% \\
 \hline
 \end{tabular}
 \end{table}
+
+Although Model B needs about $11.8\times$ fewer MACs per image, its
+training time per epoch was only slightly lower than that of Model A.
+On a CPU, depthwise convolutions are memory-bound rather than
+compute-bound and are less well optimized in standard deep learning
+libraries than dense convolutions, and training time also includes data
+loading and image resizing, which is identical for both models. The
+reduction in MACs is therefore not fully reflected in wall-clock training
+time on this hardware.
 
 \paragraph{Trade-offs of moving to depthwise-separable convolutions.}
 A standard $3\times3$ convolution learns spatial and cross-channel
@@ -739,11 +957,22 @@ cost falls from approximately 61.2 million to 5.18 million MACs per image
 (about $11.8\times$ fewer).
 
 However, this compression came with a loss in accuracy. Model A achieved
-69.14\% test accuracy whereas Model B achieved 61.85\%, a drop of 7.29
-percentage points, and the weighted F1-score fell from 68.69\% to
-59.09\%. The drop was concentrated in the harder, visually diverse
-classes: Miscellaneous Trash recall fell from 0.40 to 0.08 and Textile
-Trash recall fell from 0.58 to 0.17. Because each depthwise filter only
+a mean test accuracy of $71.36\pm1.51\%$ whereas Model B achieved
+$63.11\pm3.62\%$, a drop of 8.25 percentage points, and the mean weighted
+F1-score fell from 71.12\% to 61.75\%. The gap is several times larger
+than the run-to-run standard deviation of either model, and the
+accuracy ranges of the two models (69.71--72.93\% and 57.78--67.74\%) do
+not overlap, so the difference is not an artifact of a particular
+initialization. Model B was also less stable, with a standard deviation
+more than twice that of Model A. The drop was concentrated in the harder,
+visually diverse classes: averaged over five runs, Miscellaneous Trash
+recall fell from 0.45 to 0.28 and Textile Trash recall from 0.53 to
+0.25, while Glass recall fell from 0.68 to 0.49. In contrast, the easy
+classes changed little (Cardboard recall was 0.79 for both models and
+Vegetation 0.94 versus 0.92). Textile Trash is also the smallest class
+in the dataset (6.7\%), so even with class-weighted training it provides
+the fewest examples to learn from, and the smaller Model B was less able
+to make use of them. Because each depthwise filter only
 sees one channel, and the network has fewer layers and channels, Model B
 has less representational capacity to learn the fine-grained texture and
 colour combinations that separate these classes.
@@ -1020,20 +1249,30 @@ Parameters relative to Model B & $1\times$ & $47.4\times$ & $85.1\times$ \\
 Model Size & $\approx$184\,KB (est.) & 8.76\,MB & 15.62\,MB \\
 Approx. MACs per Image & $\approx$5.2\,M & $\approx$300\,M & $\approx$390\,M \\
 Training Epochs & 20 & 15 & 20 \\
-Test Accuracy & 61.85\% & 88.50\% & 88.92\% \\
-Weighted F1-score & 59.09\% & 89\% & 89\% \\
+Test Accuracy & 63.11 $\pm$ 3.62\%$^{\dagger}$ & 88.50\% & 88.92\% \\
+Weighted F1-score & 61.75 $\pm$ 3.77\%$^{\dagger}$ & 89\% & 89\% \\
 \hline
 \end{tabular}
 }
+
+\vspace{1mm}
+\footnotesize $^{\dagger}$Mean $\pm$ SD over five independent runs. The
+SOTA models were fine-tuned once.
 \end{table}
 
 \paragraph{Accuracy.}
 The pre-trained models clearly outperformed the custom model. MobileNetV2
-and EfficientNet-B0 reached 88.50\% and 88.92\% test accuracy, roughly 27
-percentage points above Model B's 61.85\%. The gap was largest on the
-difficult classes: Miscellaneous Trash recall was 0.08 for Model B but
-0.79--0.80 for the SOTA models, and Textile Trash recall was 0.17 for
-Model B compared with 0.92--0.96. Three factors explain this. First, the
+and EfficientNet-B0 reached 88.50\% and 88.92\% test accuracy, roughly 25
+percentage points above Model B's mean of $63.11\pm3.62\%$. Even the best
+of Model B's five runs (67.74\%) was more than 20 percentage points below
+either SOTA model, so the gap is far larger than the variation between
+runs. The SOTA results come from a single fine-tuning run each; however,
+fine-tuning from fixed pretrained weights is generally much less
+sensitive to the random seed than training from scratch. The gap was
+largest on the difficult classes, Miscellaneous Trash and Textile Trash,
+where the SOTA models reached recalls of 0.79--0.80 and 0.92--0.96
+respectively, compared with Model B's five-run means of only 0.28 and
+0.25. Three factors explain this. First, the
 SOTA models start from features learned on over a million ImageNet
 images, whereas Model B must learn everything from roughly 3,300
 training images. Second, they have far greater capacity (deeper
@@ -1086,11 +1325,19 @@ as a smartphone or an embedded Linux board, a fine-tuned MobileNetV2 offers
 the best balance of accuracy and efficiency in this study. If the target
 is a microcontroller with only hundreds of kilobytes of memory, Model B
 is one of the few viable options, at the cost of substantially lower
-accuracy. The gap between the two could be reduced by techniques such as
-knowledge distillation from a SOTA teacher into the small model, data
-augmentation, a moderately higher input resolution for Model B, or
-compressing the SOTA models through 8-bit quantization and reduced width
-multipliers.
+accuracy. Ways to reduce this gap are discussed in
+Section~\ref{sec:future_work}.
+
+% ---------------------------------------------------------------------
+\subsection{Future Work}
+\label{sec:future_work}
+
+\begin{itemize}
+    \item Train all models, including the SOTA models, over the same set of fixed random seeds for full reproducibility.
+    \item Seed all sources of randomness and enable deterministic training.
+    \item Train Model B for more epochs with a learning-rate schedule and early stopping.
+  
+\end{itemize}
 
 % End of document
 \end{document}
