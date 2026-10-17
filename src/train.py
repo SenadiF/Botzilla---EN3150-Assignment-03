@@ -101,18 +101,18 @@ if __name__ == "__main__":
     FIGS_DIR = Path(__file__).resolve().parent.parent / "figs"
     FIGS_DIR.mkdir(exist_ok=True)
 
-    # # CNN - Model A
-    # model = WasteImageNN()
-    # start_time_model_A = time.perf_counter()
-    # train_loss, validation_loss = train(model=model, train_loader=train_loader, val_loader=val_loader, num_ephohs=20, lr=1e-3)
-    # end_time_model_A = time.perf_counter()
-    # print(f"Training time : {end_time_model_A-start_time_model_A}")
-    # plot_training_loss(train_losses=train_loss, validation_losses=validation_loss,title="Model A (Standard CNN) - Train vs Validation Loss", save_path=FIGS_DIR / "model_A_loss.png")
-    # # save model
-    # torch.save(model.state_dict(), MODELS_DIR / "model_A.pth")
-    # print(f"Model Saved Successfully")
-    # # evaluvate test data
-    # test_acc = evaluate_test(model=model, test_loader=test_loader, cm_title="Model A (Standard CNN)", cm_save_path=FIGS_DIR / "model_A_cm.png")
+    # CNN - Model A
+    model = WasteImageNN()
+    start_time_model_A = time.perf_counter()
+    train_loss, validation_loss = train(model=model, train_loader=train_loader, val_loader=val_loader, num_ephohs=20, lr=1e-3)
+    end_time_model_A = time.perf_counter()
+    print(f"Training time : {end_time_model_A-start_time_model_A}")
+    plot_training_loss(train_losses=train_loss, validation_losses=validation_loss,title="Model A (Standard CNN) - Train vs Validation Loss", save_path=FIGS_DIR / "model_A_loss.png")
+    # save model
+    torch.save(model.state_dict(), MODELS_DIR / "model_A.pth")
+    print(f"Model Saved Successfully")
+    # evaluvate test data
+    test_acc = evaluate_test(model=model, test_loader=test_loader, cm_title="Model A (Standard CNN)", cm_save_path=FIGS_DIR / "model_A_cm.png")
 
     # # Depthwise Separable CNN
     model_light = WasteImageNNLight()
